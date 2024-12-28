@@ -38,10 +38,10 @@ import { createHyperStore } from '@ir-engine/hyperflux'
 
 createHyperStore()
 
-const CustomLocationPage = lazy(() => import('./CustomLocationPage'))
+const GamePage = lazy(() => import('./GamePage'))
 
 const App = () => {
-  return <CustomLocationPage />
+  return <GamePage />
 }
 
 const container = document.getElementById('root')
