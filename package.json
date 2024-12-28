@@ -1,0 +1,34 @@
+{
+  "name": "@ir-engine/ir-static-build-template",
+  "version": "0.0.0",
+  "description": "",
+  "main": "",
+  "scripts": {
+    "test": "exit 0",
+    "check-errors": "tsc --noemit",
+    "dev": "cross-env APP_ENV=development NODE_OPTIONS=--max_old_space_size=20480 vite",
+    "build": "cross-env NODE_OPTIONS=--max_old_space_size=10240 vite build",
+    "start": "ts-node server.js",
+    "format": "prettier --write \"**/*.{ts,tsx}\"",
+    "format-scss": "stylelint \"**/*.scss\" --fix",
+    "format-staged": "lint-staged",
+    "local": "npm run localbuild && npm run localstart",
+    "localbuild": "cross-env APP_ENV=production VITE_LOCAL_BUILD=true npm run build",
+    "localstart": "cross-env APP_ENV=production VITE_LOCAL_BUILD=true npm run start"
+  },
+  "peerDependencies": {},
+  "dependencies": {},
+  "devDependencies": {},
+  "license": "ISC",
+  "pre-commit": [
+    "format-staged"
+  ],
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "prettier --write \"**/*.{ts,tsx}\""
+    ],
+    "*.scss": [
+      "stylelint \"**/*.scss\" --fix"
+    ]
+  }
+}
