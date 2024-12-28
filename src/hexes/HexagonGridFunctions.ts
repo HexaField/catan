@@ -1,31 +1,11 @@
-/**
-function cube_scale(hex, factor):
-  return Cube(hex.q * factor, hex.r * factor, hex.s * factor)
-*/
+// https://www.redblobgames.com/grids/hexagons/
+
+export type AxialCoords = { q: number; r: number }
+export type CubeCoords = { q: number; r: number; s: number }
 
 export const cubeScale = (hex: CubeCoords, factor: number) => {
   return { q: hex.q * factor, r: hex.r * factor, s: hex.s * factor }
 }
-
-/**
-var cube_direction_vectors = [
-  Cube(+1, +0, -1),
-  Cube(+1, -1, +0),
-  Cube(+0, -1, +1), 
-  Cube(-1, +0, +1),
-  Cube(-1, +1, +0),
-  Cube(+0, +1, -1), 
-]
-
-function cube_direction(direction):
-  return cube_direction_vectors[direction]
-
-function cube_add(hex, vec):
-  return Cube(hex.q + vec.q, hex.r + vec.r, hex.s + vec.s)
-
-function cube_neighbor(cube, direction):
-  return cube_add(cube, cube_direction(direction))
-*/
 
 export const cubeDirectionVectors = [
   { q: +1, r: +0, s: -1 }, // west
@@ -57,17 +37,6 @@ export const cubeNeighbor = (cube: CubeCoords, direction: number) => {
   return cubeAdd(cube, cubeDirection(direction))
 }
 
-/**
- * 
-function cube_ring(center, radius):
-  var results = []
-  var hex = cube_add(center, cube_scale(cube_direction(0), radius))
-  for each 0 ≤ i < 6:
-    for each 0 ≤ j < radius:
-      results.append(hex)
-      hex = cube_neighbor(hex, i)
-  return results
-*/
 export const createRing = (center: AxialCoords, radius: number) => {
   const results = [] as { q: number; r: number }[]
   let hex = cubeAdd(
@@ -83,14 +52,6 @@ export const createRing = (center: AxialCoords, radius: number) => {
   return results
 }
 
-/**
-function cube_spiral(center, radius):
-  var results = list(center)
-  for each 1 ≤ k ≤ radius:
-    results = list_append(results, cube_ring(center, k))
-  return results
-*/
-
 export const createSpiralGrid = (center: AxialCoords, radius: number) => {
   const results = [{ q: center.q, r: center.r }]
   for (let k = 1; k <= radius; k++) {
@@ -99,5 +60,3 @@ export const createSpiralGrid = (center: AxialCoords, radius: number) => {
   return results
 }
 
-type AxialCoords = { q: number; r: number }
-type CubeCoords = { q: number; r: number; s: number }
