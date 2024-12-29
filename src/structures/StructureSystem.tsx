@@ -8,7 +8,7 @@ import {
   setComponent,
   useQuery
 } from '@ir-engine/ecs'
-import { useMutableState } from '@ir-engine/hyperflux'
+import { defineState, getState, useMutableState } from '@ir-engine/hyperflux'
 import { TransformComponent } from '@ir-engine/spatial'
 import { EngineState } from '@ir-engine/spatial/src/EngineState'
 import { NameComponent } from '@ir-engine/spatial/src/common/NameComponent'
@@ -43,23 +43,23 @@ const settlementGeometry = mergeBufferGeometries([
 settlementGeometry.computeTangents()
 settlementGeometry.computeVertexNormals()
 
-type CornerDirection = 'S' | 'N'
+export type CornerDirection = 'S' | 'N'
 
-type CornerType = {
+export type CornerType = {
   player: string
   type: 'settlement' | 'city'
   coords: { q: number; r: number; direction: CornerDirection }
 }
 
-type EdgeDirection = 'E' | 'SE' | 'SW'
+export type EdgeDirection = 'E' | 'SE' | 'SW'
 
-type EdgeType = {
+export type EdgeType = {
   player: string
   type: 'road'
   coords: { q: number; r: number; direction: EdgeDirection }
 }
 
-type StructureDataType = CornerType | EdgeType
+export type StructureDataType = CornerType | EdgeType
 
 const testData: StructureDataType[] = [
   {
@@ -104,6 +104,13 @@ const testData: StructureDataType[] = [
   }
 ]
 
+export const StructureState = defineState({
+  name: 'hexafield.catan.StructureState',
+  initial: {
+    structures: testData
+  }
+})
+
 export const StructureSystem = defineSystem({
   uuid: 'hexafield.catan.StructureSystem',
   insert: { after: PresentationSystemGroup },
@@ -116,7 +123,7 @@ export const StructureSystem = defineSystem({
 
       const radius = 1
 
-      const coordinates = testData
+      const coordinates = getState(StructureState).structures
 
       const starterSettlements = coordinates
         .filter((c) => c.type !== 'road')

@@ -49,7 +49,7 @@ import {
 import { hexHeight, hexRadius, hexWidth } from './HexagonGridConstants'
 import { axialToPixel } from './HexagonGridFunctions'
 
-const Tiles = {
+export const Tiles = {
   Hills: 'Hills',
   Forest: 'Forest',
   Mountains: 'Mountains',
@@ -58,12 +58,20 @@ const Tiles = {
   Desert: 'Desert'
 } as const
 
-const Resources = {
+export const Resources = {
   Brick: 'Brick',
   Lumber: 'Lumber',
   Ore: 'Ore',
   Grain: 'Grain',
   Pasture: 'Pasture'
+} as const
+
+export const ResourceByTile = {
+  Hills: Resources.Brick,
+  Forest: Resources.Lumber,
+  Mountains: Resources.Ore,
+  Fields: Resources.Grain,
+  Pasture: Resources.Pasture
 } as const
 
 const ChanceToDots = {

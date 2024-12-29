@@ -6,6 +6,7 @@ import { useSpatialEngine } from '@ir-engine/spatial/src/initializeEngine'
 
 import './hexes/HexagonGridSystem'
 import './structures/StructureSystem'
+import './player/PlayerSystem'
 
 import { RendererState } from '@ir-engine/spatial/src/renderer/RendererState'
 import React, { useEffect } from 'react'
