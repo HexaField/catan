@@ -1,5 +1,4 @@
 import {
-  Engine,
   Entity,
   PresentationSystemGroup,
   QueryReactor,
@@ -18,8 +17,8 @@ import {
 } from '@ir-engine/ecs'
 import { useTexture } from '@ir-engine/engine/src/assets/functions/resourceLoaderHooks'
 import { TextComponent } from '@ir-engine/engine/src/scene/components/TextComponent'
-import { defineState, useHookstate, useMutableState } from '@ir-engine/hyperflux'
-import { TransformComponent } from '@ir-engine/spatial'
+import { defineState, hookstate, none, useHookstate, useMutableState } from '@ir-engine/hyperflux'
+import { AmbientLightComponent, DirectionalLightComponent, TransformComponent } from '@ir-engine/spatial'
 import { EngineState } from '@ir-engine/spatial/src/EngineState'
 import { CameraComponent } from '@ir-engine/spatial/src/camera/components/CameraComponent'
 import { CameraOrbitComponent } from '@ir-engine/spatial/src/camera/components/CameraOrbitComponent'
@@ -36,7 +35,9 @@ import React, { useEffect } from 'react'
 import {
   BufferGeometry,
   CircleGeometry,
+  Color,
   DoubleSide,
+  Euler,
   Float32BufferAttribute,
   Mesh,
   MeshBasicMaterial,
@@ -45,11 +46,8 @@ import {
   Vector2,
   Vector3
 } from 'three'
-import { createSpiralGrid } from './HexagonGridFunctions'
-
-const hexDiameter = 1
-const hexHeight = 2
-const hexWidth = Math.sqrt(3)
+import { hexHeight, hexRadius, hexWidth } from './HexagonGridConstants'
+import { axialToPixel } from './HexagonGridFunctions'
 
 const Tiles = {
   Hills: 'Hills',
@@ -71,12 +69,12 @@ const Resources = {
 const ChanceToDots = {
   2: 1,
   3: 2,
-  4: 2,
+  4: 3,
   5: 4,
   6: 5,
   8: 5,
   9: 4,
-  10: 2,
+  10: 3,
   11: 2,
   12: 1
 } as const
@@ -110,7 +108,7 @@ const StarterGame = [
   { q: 1, r: -2, tile: 'Pasture', chance: 2 }
 ] as GridStorage[]
 
-const HexagonGridComponent = defineComponent({
+export const HexagonGridComponent = defineComponent({
   name: 'HexagonGridComponent',
 
   schema: S.Object({
@@ -120,7 +118,24 @@ const HexagonGridComponent = defineComponent({
     }),
     tile: S.String(),
     chance: S.Number() // 2-12
-  })
+  }),
+
+  coordsToEntity: hookstate({} as Record<string, Entity>),
+
+  reactor: () => {
+    const entity = useEntityContext()
+    const coords = useComponent(entity, HexagonGridComponent).coords.value
+
+    useEffect(() => {
+      const str = `${coords.q},${coords.r}`
+      HexagonGridComponent.coordsToEntity[str].set(entity)
+      return () => {
+        HexagonGridComponent.coordsToEntity[str].set(none)
+      }
+    }, [coords.q, coords.r])
+
+    return null
+  }
 })
 
 export const HexagonGridState = defineState({
@@ -145,8 +160,6 @@ export const GridSystem = defineSystem({
       setComponent(viewerEntity, CameraOrbitComponent)
       setComponent(viewerEntity, InputComponent)
       getComponent(viewerEntity, CameraComponent).position.set(0, 3, 4)
-
-      // getMutableState(RendererState).gridVisibility.set(true)
     }, [viewerEntity])
 
     const originEntity = useMutableState(EngineState).originEntity.value
@@ -159,15 +172,36 @@ export const GridSystem = defineSystem({
       setComponent(entity, UUIDComponent, UUIDComponent.generateUUID())
       setComponent(entity, NameComponent, 'Catan Scene')
       setComponent(entity, TransformComponent)
-      setComponent(entity, EntityTreeComponent, { parentEntity: Engine.instance.originEntity })
+      setComponent(entity, EntityTreeComponent, { parentEntity: originEntity })
       setComponent(entity, VisibleComponent)
       setComponent(entity, SceneComponent)
       sceneEntity.set(entity)
+
+      const directionalLightEntity = createEntity()
+      setComponent(directionalLightEntity, UUIDComponent, UUIDComponent.generateUUID())
+      setComponent(directionalLightEntity, NameComponent, 'Directional Light')
+      setComponent(directionalLightEntity, TransformComponent, {
+        rotation: new Quaternion().setFromEuler(new Euler(2, 5, 3))
+      })
+      setComponent(directionalLightEntity, EntityTreeComponent, { parentEntity: originEntity })
+      setComponent(directionalLightEntity, VisibleComponent, true)
+      setComponent(directionalLightEntity, DirectionalLightComponent, { color: new Color('white'), intensity: 0.5 })
+
+      const ambientLightEntity = createEntity()
+      setComponent(ambientLightEntity, UUIDComponent, UUIDComponent.generateUUID())
+      setComponent(ambientLightEntity, NameComponent, 'Ambient Light')
+      setComponent(ambientLightEntity, TransformComponent)
+      setComponent(ambientLightEntity, EntityTreeComponent, { parentEntity: originEntity })
+      setComponent(ambientLightEntity, VisibleComponent, true)
+      setComponent(ambientLightEntity, AmbientLightComponent, { color: new Color('white'), intensity: 1 })
 
       getMutableComponent(viewerEntity, RendererComponent).scenes.merge([entity])
 
       return () => {
         sceneEntity.set(UndefinedEntity)
+        removeEntity(sceneEntity.value)
+        removeEntity(directionalLightEntity)
+        removeEntity(ambientLightEntity)
       }
     }, [originEntity, viewerEntity])
 
@@ -226,6 +260,7 @@ const HexagonGridLoader = () => {
     setComponent(chanceTextEntity, EntityTreeComponent, { parentEntity: entity })
     setComponent(chanceTextEntity, VisibleComponent)
     setComponent(chanceTextEntity, TextComponent, {
+      // text: `${coords.q},${coords.r}`,
       text: chance.toString(),
       textAlign: 'center',
       textAnchor: new Vector2(50, 50),
@@ -279,7 +314,7 @@ const HexagonGridLoader = () => {
 const hexGeom = new BufferGeometry()
 // single hexagon outline base on consts defined above, along xz plane
 // prettier-ignore
-const vertices = [
+export const vertices = [
   0, 0, 0, // center
   0, 0, hexHeight / 2, // top
   hexWidth / 2, 0, hexHeight / 4, // top right
@@ -305,25 +340,24 @@ const GridBuilderReactor = (props: { parentEntity: Entity }) => {
   const { gridWidthCount, gridHeightCount } = useMutableState(HexagonGridState).value
 
   useEffect(() => {
-    const gridCoords = createSpiralGrid({ q: 0, r: 0 }, 3)
-    const randomGrid = gridCoords.map((coord) => {
-      return {
-        ...coord,
-        tile: Object.values(Tiles)[Math.floor(Math.random() * 6)],
-        chance: Math.floor(Math.random() * 11) + 2
-      } as GridStorage
-    })
+    // const gridCoords = createSpiralGrid({ q: 0, r: 0 }, 3)
+    // const randomGrid = gridCoords.map((coord) => {
+    //   return {
+    //     ...coord,
+    //     tile: Object.values(Tiles)[Math.floor(Math.random() * 6)],
+    //     chance: Math.floor(Math.random() * 11) + 2
+    //   } as GridStorage
+    // })
     const starterGrid = StarterGame
     const grid = starterGrid.map(({ q, r, tile, chance }, i) => {
-      const x = hexDiameter * (hexWidth * q + (hexWidth / 2) * r)
-      const z = hexDiameter * ((3 / 2) * r)
+      const { x, z } = axialToPixel({ q, r }, hexWidth, hexRadius)
 
       const entity = createEntity()
       setComponent(entity, UUIDComponent, UUIDComponent.generateUUID())
       setComponent(entity, NameComponent, `Hexagon ${i}`)
       setComponent(entity, TransformComponent, {
         position: new Vector3(x, 0, z),
-        scale: new Vector3(hexDiameter, hexDiameter, hexDiameter)
+        scale: new Vector3(hexRadius, hexRadius, hexRadius)
       })
       setComponent(entity, EntityTreeComponent, { parentEntity })
       setComponent(entity, VisibleComponent)

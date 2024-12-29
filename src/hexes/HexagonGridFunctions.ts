@@ -59,3 +59,16 @@ export const createSpiralGrid = (center: AxialCoords, radius: number) => {
   }
   return results
 }
+
+// from an input axial coordinate, return the pixel position of one of the hexagon's vertices (pointy top)
+export const getHexVertexPosition = (hex: AxialCoords) => {
+  const x = Math.sqrt(3) * (hex.q + hex.r / 2)
+  const y = (3 / 2) * hex.r
+  return { x: x, y: y }
+}
+
+export const axialToPixel = (hex: AxialCoords, hexWidth: number, hexRadius: number) => {
+  const x = hexRadius * (hexWidth * hex.q + (hexWidth / 2) * hex.r)
+  const z = hexRadius * ((3 / 2) * hex.r)
+  return { x, z }
+}
