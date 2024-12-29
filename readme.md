@@ -4,7 +4,12 @@
 ## Progress
 
 - [x] Basic hex construction
-- [ ] 
+- [x] Chance indicators and starter game
+- [ ] Settlement, cities and roads
+- [ ] Dice roll, turns and resources
+- [ ] Placement of buildings
+- [ ] Robber
+- [ ] Harbours
 
 # Resources
 
