@@ -59,4 +59,3 @@ export const createSpiralGrid = (center: AxialCoords, radius: number) => {
   }
   return results
 }
-
