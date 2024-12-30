@@ -20,11 +20,8 @@ import { TextComponent } from '@ir-engine/engine/src/scene/components/TextCompon
 import { defineState, hookstate, none, useHookstate, useMutableState } from '@ir-engine/hyperflux'
 import { AmbientLightComponent, DirectionalLightComponent, TransformComponent } from '@ir-engine/spatial'
 import { EngineState } from '@ir-engine/spatial/src/EngineState'
-import { CameraComponent } from '@ir-engine/spatial/src/camera/components/CameraComponent'
-import { CameraOrbitComponent } from '@ir-engine/spatial/src/camera/components/CameraOrbitComponent'
 import { NameComponent } from '@ir-engine/spatial/src/common/NameComponent'
 import { mergeBufferGeometries } from '@ir-engine/spatial/src/common/classes/BufferGeometryUtils'
-import { InputComponent } from '@ir-engine/spatial/src/input/components/InputComponent'
 import { RendererComponent } from '@ir-engine/spatial/src/renderer/WebGLRendererSystem'
 import { addObjectToGroup } from '@ir-engine/spatial/src/renderer/components/GroupComponent'
 import { MeshComponent } from '@ir-engine/spatial/src/renderer/components/MeshComponent'
@@ -161,16 +158,7 @@ export const GridSystem = defineSystem({
     //
   },
   reactor: function () {
-    const viewerEntity = useMutableState(EngineState).viewerEntity.value
-
-    useEffect(() => {
-      if (!viewerEntity) return
-      setComponent(viewerEntity, CameraOrbitComponent)
-      setComponent(viewerEntity, InputComponent)
-      getComponent(viewerEntity, CameraComponent).position.set(0, 3, 4)
-    }, [viewerEntity])
-
-    const originEntity = useMutableState(EngineState).originEntity.value
+    const { viewerEntity, originEntity } = useMutableState(EngineState).value
     const sceneEntity = useHookstate(UndefinedEntity)
 
     useEffect(() => {

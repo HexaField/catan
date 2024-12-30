@@ -35,11 +35,11 @@ import path from 'path'
 
 const cwd = process.cwd()
 
-dotenv.config({ path: packageRoot.path + '/.env.local' })
+dotenv.config({ path: cwd + '/.env.local' })
 
 const app = new koa()
-const PORT = parseInt(process.env.VITE_APP_PORT) || 3000
-const HTTPS = process.env.VITE_LOCAL_BUILD ?? false
+const PORT = parseInt(process.env.VITE_CLIENT_PORT) || 3000
+const HTTPS = process.env.HTTPS ?? false
 const key = process.env.KEY || 'certs/key.pem'
 const cert = process.env.CERT || 'certs/cert.pem'
 

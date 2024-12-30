@@ -30,9 +30,11 @@ import path from 'path'
 import { defineConfig, UserConfig } from 'vite'
 import manifestJson from './manifest.json'
 
+const cwd = process.cwd()
+
 export default defineConfig(async ({ command }) => {
   dotenv.config({
-    path: packageRoot.path + '/.env.local'
+    path: cwd + '/.env.local'
   })
 
   const isDev = process.env.APP_ENV === 'development'
@@ -51,13 +53,13 @@ export default defineConfig(async ({ command }) => {
       hmr:
         process.env.VITE_HMR === 'true'
           ? {
-              port: process.env['VITE_APP_PORT'],
-              host: process.env['VITE_APP_HOST'],
+              port: process.env['VITE_CLIENT_PORT'],
+              host: process.env['VITE_CLIENT_HOST'],
               overlay: false
             }
           : false,
-      host: process.env['VITE_APP_HOST'],
-      port: process.env['VITE_APP_PORT'],
+      host: process.env['VITE_CLIENT_HOST'],
+      port: process.env['VITE_CLIENT_PORT'],
       headers: {
         'Origin-Agent-Cluster': '?1'
       },

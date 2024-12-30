@@ -61,12 +61,10 @@ export const PlayerState = defineState({
   name: 'hexafield.catan.PlayerState',
   initial: {
     currentPlayer: 'red',
-    players: {} as Record<
-      string /** colour */,
-      {
-        resources: Record<keyof typeof Resources, number>
-        userID: UserID
-      }
-    >
+    players: [] as Array<{
+      color: string
+      resources: Record<keyof typeof Resources, number>
+      userID: UserID
+    }>
   }
 })
