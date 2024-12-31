@@ -17,13 +17,12 @@ import { addObjectToGroup } from '@ir-engine/spatial/src/renderer/components/Gro
 import { MeshComponent } from '@ir-engine/spatial/src/renderer/components/MeshComponent'
 import { VisibleComponent } from '@ir-engine/spatial/src/renderer/components/VisibleComponent'
 import { EntityTreeComponent } from '@ir-engine/spatial/src/transform/components/EntityTree'
-import { useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { BoxGeometry, CylinderGeometry, DoubleSide, Mesh, MeshLambertMaterial, Quaternion, Vector3 } from 'three'
 import { hexRadius, hexWidth } from '../hexes/HexagonGridConstants'
 import { axialToPixel } from '../hexes/HexagonGridFunctions'
 import { HexagonGridComponent, vertices } from '../hexes/HexagonGridSystem'
-
-const players = ['red', 'blue', 'white', 'orange']
+import { PlayerColorsType } from '../player/PlayerSystem'
 
 const settlementHeight = 0.4
 const settlementWidth = 0.6
@@ -46,7 +45,7 @@ settlementGeometry.computeVertexNormals()
 export type CornerDirection = 'S' | 'N'
 
 export type CornerType = {
-  player: string
+  player: PlayerColorsType
   type: 'settlement' | 'city'
   coords: { q: number; r: number; direction: CornerDirection }
 }
@@ -54,60 +53,17 @@ export type CornerType = {
 export type EdgeDirection = 'E' | 'SE' | 'SW'
 
 export type EdgeType = {
-  player: string
+  player: PlayerColorsType
   type: 'road'
   coords: { q: number; r: number; direction: EdgeDirection }
 }
 
 export type StructureDataType = CornerType | EdgeType
 
-const testData: StructureDataType[] = [
-  {
-    player: 'red',
-    type: 'settlement',
-    coords: { q: 1, r: -1, direction: 'N' }
-  },
-  {
-    player: 'red',
-    type: 'road',
-    coords: { q: 1, r: -2, direction: 'SE' }
-  },
-  {
-    player: 'blue',
-    type: 'settlement',
-    coords: { q: -2, r: 2, direction: 'N' }
-  },
-  {
-    player: 'blue',
-    type: 'road',
-    coords: { q: -2, r: 1, direction: 'E' }
-  },
-  {
-    player: 'white',
-    type: 'settlement',
-    coords: { q: 2, r: -1, direction: 'S' }
-  },
-  {
-    player: 'white',
-    type: 'road',
-    coords: { q: 1, r: 0, direction: 'E' }
-  },
-  {
-    player: 'orange',
-    type: 'settlement',
-    coords: { q: -1, r: 0, direction: 'N' }
-  },
-  {
-    player: 'orange',
-    type: 'road',
-    coords: { q: -1, r: -1, direction: 'E' }
-  }
-]
-
 export const StructureState = defineState({
   name: 'hexafield.catan.StructureState',
   initial: {
-    structures: testData
+    structures: [] as StructureDataType[]
   }
 })
 
@@ -117,90 +73,92 @@ export const StructureSystem = defineSystem({
   reactor: () => {
     const gridReady = useQuery([HexagonGridComponent]).length > 0
     const originEntity = useMutableState(EngineState).originEntity.value
+    const structures = useMutableState(StructureState).structures.value
 
-    useEffect(() => {
-      if (!gridReady || !originEntity) return
+    if (!gridReady || !originEntity) return null
 
-      const radius = 1
-
-      const coordinates = getState(StructureState).structures
-
-      const starterSettlements = coordinates
-        .filter((c) => c.type !== 'road')
-        .map((coords, i) => {
-          const settlementEntity = createEntity()
-          setComponent(settlementEntity, UUIDComponent, UUIDComponent.generateUUID())
-          setComponent(settlementEntity, NameComponent, `Settlement-${coords.player}`)
-
-          const offset = axialToPixel(coords.coords, hexWidth, hexRadius)
-
-          const vertexIndex = coords.coords.direction === 'N' ? 4 : 1
-
-          setComponent(settlementEntity, TransformComponent, {
-            position: new Vector3(offset.x + vertices[vertexIndex * 3], 0, offset.z + vertices[vertexIndex * 3 + 2]),
-            scale: new Vector3().setScalar(0.4)
-          })
-          setComponent(settlementEntity, EntityTreeComponent, { parentEntity: originEntity })
-          setComponent(settlementEntity, VisibleComponent)
-
-          setComponent(
-            settlementEntity,
-            MeshComponent,
-            new Mesh(settlementGeometry, new MeshLambertMaterial({ side: DoubleSide, color: coords.player }))
-          )
-          addObjectToGroup(settlementEntity, getComponent(settlementEntity, MeshComponent))
-
-          return settlementEntity
-        })
-
-      const starterRoads = coordinates
-        .filter((c) => c.type === 'road')
-        .map((coords, i) => {
-          const roadEntity = createEntity()
-          setComponent(roadEntity, UUIDComponent, UUIDComponent.generateUUID())
-          setComponent(roadEntity, NameComponent, `Road-${coords.player}`)
-
-          const startPoint = axialToPixel(coords.coords, hexWidth, hexRadius)
-
-          const direction = coords.coords.direction === 'E' ? 0 : coords.coords.direction === 'SE' ? 5 : 4
-          const hexEdgeLength = hexRadius
-          const angle = (direction * Math.PI) / 3
-          const offset =
-            coords.coords.direction === 'E'
-              ? new Vector3(hexWidth, 0, 0)
-              : coords.coords.direction === 'SE'
-              ? new Vector3(hexWidth / 2, 0, (hexWidth / 2) * Math.sqrt(3))
-              : new Vector3(-hexWidth / 2, 0, (hexWidth / 2) * Math.sqrt(3))
-
-          setComponent(roadEntity, TransformComponent, {
-            position: new Vector3(startPoint.x, 0, startPoint.z).add(offset.clone().multiplyScalar(hexEdgeLength / 2)),
-            rotation: new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), angle)
-          })
-          setComponent(roadEntity, EntityTreeComponent, { parentEntity: originEntity })
-          setComponent(roadEntity, VisibleComponent)
-
-          const roadGeometry = new BoxGeometry(0.05, 0.05, hexEdgeLength).translate(0, 0.05, 0)
-
-          setComponent(
-            roadEntity,
-            MeshComponent,
-            new Mesh(roadGeometry, new MeshLambertMaterial({ side: DoubleSide, color: coords.player }))
-          )
-          addObjectToGroup(roadEntity, getComponent(roadEntity, MeshComponent))
-
-          return roadEntity
-        })
-
-      return () => {
-        for (const entity of starterSettlements) {
-          removeEntity(entity)
-        }
-        for (const entity of starterRoads) {
-          removeEntity(entity)
-        }
-      }
-    }, [gridReady, originEntity])
-
-    return null
+    return (
+      <>
+        {structures.map((structure, i) => (
+          <StructureReactor key={i} data={structure} />
+        ))}
+      </>
+    )
   }
 })
+
+const StructureReactor = (props: { data: StructureDataType }) => {
+  const { data } = props
+
+  useEffect(() => {
+    const originEntity = getState(EngineState).originEntity
+
+    if (data.type === 'settlement') {
+      const settlementEntity = createEntity()
+      setComponent(settlementEntity, UUIDComponent, UUIDComponent.generateUUID())
+      setComponent(settlementEntity, NameComponent, `Settlement-${data.player}`)
+
+      const offset = axialToPixel(data.coords, hexWidth, hexRadius)
+
+      const vertexIndex = data.coords.direction === 'N' ? 4 : 1
+
+      setComponent(settlementEntity, TransformComponent, {
+        position: new Vector3(offset.x + vertices[vertexIndex * 3], 0, offset.z + vertices[vertexIndex * 3 + 2]),
+        scale: new Vector3().setScalar(0.4)
+      })
+      setComponent(settlementEntity, EntityTreeComponent, { parentEntity: originEntity })
+      setComponent(settlementEntity, VisibleComponent)
+
+      setComponent(
+        settlementEntity,
+        MeshComponent,
+        new Mesh(settlementGeometry, new MeshLambertMaterial({ side: DoubleSide, color: data.player }))
+      )
+      addObjectToGroup(settlementEntity, getComponent(settlementEntity, MeshComponent))
+
+      return () => {
+        removeEntity(settlementEntity)
+      }
+    }
+
+    if (data.type === 'road') {
+      const roadEntity = createEntity()
+      setComponent(roadEntity, UUIDComponent, UUIDComponent.generateUUID())
+      setComponent(roadEntity, NameComponent, `Road-${data.player}`)
+
+      const startPoint = axialToPixel(data.coords, hexWidth, hexRadius)
+
+      const direction = data.coords.direction === 'E' ? 0 : data.coords.direction === 'SE' ? 5 : 4
+      const hexEdgeLength = hexRadius
+      const angle = (direction * Math.PI) / 3
+      const offset =
+        data.coords.direction === 'E'
+          ? new Vector3(hexWidth, 0, 0)
+          : data.coords.direction === 'SE'
+          ? new Vector3(hexWidth / 2, 0, (hexWidth / 2) * Math.sqrt(3))
+          : new Vector3(-hexWidth / 2, 0, (hexWidth / 2) * Math.sqrt(3))
+
+      setComponent(roadEntity, TransformComponent, {
+        position: new Vector3(startPoint.x, 0, startPoint.z).add(offset.clone().multiplyScalar(hexEdgeLength / 2)),
+        rotation: new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), angle)
+      })
+      setComponent(roadEntity, EntityTreeComponent, { parentEntity: originEntity })
+      setComponent(roadEntity, VisibleComponent)
+
+      const roadGeometry = new BoxGeometry(0.05, 0.05, hexEdgeLength).translate(0, 0.05, 0)
+
+      setComponent(
+        roadEntity,
+        MeshComponent,
+        new Mesh(roadGeometry, new MeshLambertMaterial({ side: DoubleSide, color: data.player }))
+      )
+      addObjectToGroup(roadEntity, getComponent(roadEntity, MeshComponent))
+
+      return () => {
+        removeEntity(roadEntity)
+      }
+    }
+  }, [])
+
+  return null
+}

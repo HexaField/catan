@@ -1,5 +1,5 @@
 import { CubeDirection, cubeNeighbor } from '../hexes/HexagonGridFunctions'
-import { StructureDataType } from './StructureSystem'
+import { CornerDirection, EdgeDirection, StructureDataType } from './StructureSystem'
 
 /**
  * Returns the three hexes adjacent to a corner structure.
@@ -29,4 +29,18 @@ export const getAdjacentHexesToStructure = (structure: StructureDataType) => {
       return [null, cubeNeighbor(hex, CubeDirection.Southwest), hex]
   }
   return [null, null, null]
+}
+
+export const getRandomCornerCoords = () => {
+  const q = Math.floor(Math.random() * 5) - 2
+  const r = Math.floor(Math.random() * 5) - 2
+  const direction = Math.random() > 0.5 ? 'N' : 'S'
+  return { q, r, direction } as { q: number; r: number; direction: CornerDirection }
+}
+
+export const getRandomEdgeCoords = () => {
+  const q = Math.floor(Math.random() * 5) - 2
+  const r = Math.floor(Math.random() * 5) - 2
+  const direction = Math.random() > 0.5 ? 'E' : Math.random() > 0.5 ? 'SE' : 'SW'
+  return { q, r, direction } as { q: number; r: number; direction: EdgeDirection }
 }

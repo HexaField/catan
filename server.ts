@@ -1,6 +1,6 @@
 import { Application } from '@feathersjs/feathers'
-import { Configuration, createApp } from '@hexafield/ir-simple-api/src/server/index'
-import baseServices from '@hexafield/ir-simple-api/src/server/services/index'
+import { Configuration, createApp } from '@hexafield/ir-simple-api/src/server'
+import baseServices from '@hexafield/ir-simple-api/src/server/services'
 import dotenv from 'dotenv'
 
 const cwd = process.cwd()

@@ -1,0 +1,50 @@
+{
+  "public/Desert.png": {
+    "type": "file",
+    "tags": [
+      "Image"
+    ],
+    "dependencies": [],
+    "name": "Desert.png"
+  },
+  "public/Fields.png": {
+    "type": "file",
+    "tags": [
+      "Image"
+    ],
+    "dependencies": [],
+    "name": "Fields.png"
+  },
+  "public/Forest.png": {
+    "type": "file",
+    "tags": [
+      "Image"
+    ],
+    "dependencies": [],
+    "name": "Forest.png"
+  },
+  "public/Hills.png": {
+    "type": "file",
+    "tags": [
+      "Image"
+    ],
+    "dependencies": [],
+    "name": "Hills.png"
+  },
+  "public/Mountains.png": {
+    "type": "file",
+    "tags": [
+      "Image"
+    ],
+    "dependencies": [],
+    "name": "Mountains.png"
+  },
+  "public/Pasture.png": {
+    "type": "file",
+    "tags": [
+      "Image"
+    ],
+    "dependencies": [],
+    "name": "Pasture.png"
+  }
+}

@@ -6,6 +6,7 @@ import { useSpatialEngine } from '@ir-engine/spatial/src/initializeEngine'
 
 import './hexes/HexagonGridSystem'
 import './player/PlayerSystem'
+import './game/GameSystem'
 import './structures/StructureSystem'
 
 import { getComponent, setComponent } from '@ir-engine/ecs'

@@ -17,7 +17,7 @@ import {
 } from '@ir-engine/ecs'
 import { useTexture } from '@ir-engine/engine/src/assets/functions/resourceLoaderHooks'
 import { TextComponent } from '@ir-engine/engine/src/scene/components/TextComponent'
-import { defineState, hookstate, none, useHookstate, useMutableState } from '@ir-engine/hyperflux'
+import { hookstate, none, useHookstate, useMutableState } from '@ir-engine/hyperflux'
 import { AmbientLightComponent, DirectionalLightComponent, TransformComponent } from '@ir-engine/spatial'
 import { EngineState } from '@ir-engine/spatial/src/EngineState'
 import { NameComponent } from '@ir-engine/spatial/src/common/NameComponent'
@@ -63,6 +63,8 @@ export const Resources = {
   Pasture: 'Pasture'
 } as const
 
+export type ResourceType = keyof typeof Resources
+
 export const ResourceByTile = {
   Hills: Resources.Brick,
   Forest: Resources.Lumber,
@@ -88,11 +90,11 @@ type GridStorage = {
   q: number
   r: number
   tile: keyof typeof Tiles
-  chance: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12
+  chance: 2 | 3 | 4 | 5 | 6 | 0 | 8 | 9 | 10 | 11 | 12
 }
 
-const StarterGame = [
-  { q: 0, r: 0, tile: 'Desert', chance: 7 },
+const StarterGame: GridStorage[] = [
+  { q: 0, r: 0, tile: 'Desert', chance: 0 },
   { q: 1, r: -1, tile: 'Pasture', chance: 4 },
   { q: 1, r: 0, tile: 'Forest', chance: 3 },
   { q: 0, r: 1, tile: 'Fields', chance: 4 },
@@ -111,7 +113,7 @@ const StarterGame = [
   { q: -1, r: -1, tile: 'Fields', chance: 12 },
   { q: 0, r: -2, tile: 'Mountains', chance: 10 },
   { q: 1, r: -2, tile: 'Pasture', chance: 2 }
-] as GridStorage[]
+]
 
 export const HexagonGridComponent = defineComponent({
   name: 'HexagonGridComponent',
@@ -140,14 +142,6 @@ export const HexagonGridComponent = defineComponent({
     }, [coords.q, coords.r])
 
     return null
-  }
-})
-
-export const HexagonGridState = defineState({
-  name: 'hexafield.catan.HexagonGridState',
-  initial: {
-    gridWidthCount: 5,
-    gridHeightCount: 5
   }
 })
 
@@ -222,7 +216,7 @@ const HexagonGridLoader = () => {
     material.map = texture
   }, [texture])
 
-  if (chance === 7) return null
+  if (chance === 0) return null
 
   const chanceBackgroundEntity = useHookstate(() => {
     const chanceBackgroundEntity = createEntity()
@@ -333,8 +327,6 @@ hexGeom.setAttribute(
 const GridBuilderReactor = (props: { parentEntity: Entity }) => {
   const { parentEntity } = props
 
-  const { gridWidthCount, gridHeightCount } = useMutableState(HexagonGridState).value
-
   useEffect(() => {
     // const gridCoords = createSpiralGrid({ q: 0, r: 0 }, 3)
     // const randomGrid = gridCoords.map((coord) => {
@@ -375,7 +367,7 @@ const GridBuilderReactor = (props: { parentEntity: Entity }) => {
         removeEntity(entity)
       })
     }
-  }, [gridWidthCount, gridHeightCount, parentEntity])
+  }, [parentEntity])
 
   return null
 }
