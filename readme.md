@@ -12,13 +12,15 @@ Designed with fun and not security in mind!
 - [x] P2P Signaling server and client connectivity
 - [x] Dice roll, turns and resources
 - [x] Placement of structures
+- [x] Turn Done & Resources UI
+- [ ] Purchase structures UI
+- [ ] Resource Trading UI
+- [ ] Dice Roll UI
 - [ ] Robber
 - [ ] Harbours
 - [ ] Development cards
-- [ ] Resource Trading
 - [ ] Room selection that persists in URL search params
-- [ ] Colour selection menu
-- [ ] UI for dice roll, resources, etc
+- [ ] Colour selection UI
 - [ ] Expansion packs!
 
 # Resources Used
