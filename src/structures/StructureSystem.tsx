@@ -30,7 +30,7 @@ const settlementLength = 0.8
 const settlementRoofHeight = 0.4
 const settlementRoofRadius = (settlementWidth * Math.sqrt(3)) / 3
 
-const settlementGeometry = mergeBufferGeometries([
+export const settlementGeometry = mergeBufferGeometries([
   // box
   new BoxGeometry(settlementWidth, settlementHeight, settlementLength).translate(0, settlementHeight / 2, 0),
   // peaked roof - triangular prism
@@ -41,6 +41,7 @@ const settlementGeometry = mergeBufferGeometries([
 ])!
 settlementGeometry.computeTangents()
 settlementGeometry.computeVertexNormals()
+settlementGeometry.scale(0.4, 0.4, 0.4)
 
 export type CornerDirection = 'S' | 'N'
 
@@ -103,8 +104,7 @@ const StructureReactor = (props: { data: StructureDataType }) => {
       const vertexIndex = data.coords.direction === 'N' ? 4 : 1
 
       setComponent(settlementEntity, TransformComponent, {
-        position: new Vector3(offset.x + vertices[vertexIndex * 3], 0, offset.z + vertices[vertexIndex * 3 + 2]),
-        scale: new Vector3().setScalar(0.4)
+        position: new Vector3(offset.x + vertices[vertexIndex * 3], 0, offset.z + vertices[vertexIndex * 3 + 2])
       })
       setComponent(settlementEntity, EntityTreeComponent, { parentEntity: originEntity })
       setComponent(settlementEntity, VisibleComponent)
@@ -112,7 +112,7 @@ const StructureReactor = (props: { data: StructureDataType }) => {
       setComponent(
         settlementEntity,
         MeshComponent,
-        new Mesh(settlementGeometry, new MeshLambertMaterial({ side: DoubleSide, color: data.player }))
+        new Mesh(settlementGeometry.clone(), new MeshLambertMaterial({ side: DoubleSide, color: data.player }))
       )
       addObjectToGroup(settlementEntity, getComponent(settlementEntity, MeshComponent))
 

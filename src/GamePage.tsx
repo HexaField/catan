@@ -8,6 +8,7 @@ import './hexes/HexagonGridSystem'
 import './player/PlayerSystem'
 import './game/GameSystem'
 import './structures/StructureSystem'
+import './structures/StructurePlacementSystem'
 
 import { getComponent, setComponent } from '@ir-engine/ecs'
 import { EngineState } from '@ir-engine/spatial/src/EngineState'

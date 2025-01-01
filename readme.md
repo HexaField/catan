@@ -11,7 +11,7 @@ Designed with fun and not security in mind!
 - [x] Settlement, cities and roads
 - [x] P2P Signaling server and client connectivity
 - [x] Dice roll, turns and resources
-- [ ] Placement of buildings
+- [ ] Placement of structures
 - [ ] Robber
 - [ ] Harbours
 - [ ] Development cards
