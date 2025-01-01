@@ -10,6 +10,7 @@ import {
   defineQuery,
   defineSystem,
   getComponent,
+  hasComponent,
   removeEntity,
   setComponent,
   useComponent,
@@ -77,7 +78,7 @@ const getValidSelectedHelper = () => {
 
   const selectedEntity = intersections[0]?.entity
 
-  if (!selectedEntity) return
+  if (!selectedEntity || !hasComponent(selectedEntity, StructureHelperComponent)) return
 
   const active = getState(StructurePlacementState).active
 

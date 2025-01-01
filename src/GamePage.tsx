@@ -4,11 +4,12 @@ import { useEngineCanvas } from '@ir-engine/client-core/src/hooks/useEngineCanva
 import { NetworkID, useMutableState, useReactiveRef } from '@ir-engine/hyperflux'
 import { useSpatialEngine } from '@ir-engine/spatial/src/initializeEngine'
 
+import './game/GameSystem'
 import './hexes/HexagonGridSystem'
 import './player/PlayerSystem'
-import './game/GameSystem'
-import './structures/StructureSystem'
+import './resources/ResourceSystem'
 import './structures/StructurePlacementSystem'
+import './structures/StructureSystem'
 
 import { getComponent, setComponent } from '@ir-engine/ecs'
 import { EngineState } from '@ir-engine/spatial/src/EngineState'

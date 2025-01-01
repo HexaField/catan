@@ -1,4 +1,14 @@
-import { InputSystemGroup, defineSystem, entityExists, getComponent, hasComponent } from '@ir-engine/ecs'
+import {
+  InputSystemGroup,
+  UUIDComponent,
+  defineSystem,
+  entityExists,
+  getComponent,
+  hasComponent,
+  removeEntity,
+  setComponent
+} from '@ir-engine/ecs'
+import { createXRUI } from '@ir-engine/engine/src/xrui/createXRUI'
 import {
   NO_PROXY,
   UserID,
@@ -9,12 +19,18 @@ import {
   getMutableState,
   getState,
   matches,
+  useHookstate,
   useMutableState
 } from '@ir-engine/hyperflux'
 import { NetworkTopics, matchesUserID } from '@ir-engine/network'
+import { TransformComponent } from '@ir-engine/spatial'
 import { EngineState } from '@ir-engine/spatial/src/EngineState'
+import { NameComponent } from '@ir-engine/spatial/src/common/NameComponent'
 import { InputComponent } from '@ir-engine/spatial/src/input/components/InputComponent'
-import { useEffect } from 'react'
+import { setVisibleComponent } from '@ir-engine/spatial/src/renderer/components/VisibleComponent'
+import { EntityTreeComponent } from '@ir-engine/spatial/src/transform/components/EntityTree'
+import React, { useEffect } from 'react'
+import { Vector3 } from 'three'
 import { HexagonGridComponent, ResourceByTile, ResourceType } from '../hexes/HexagonGridSystem'
 import { PlayerColors, PlayerColorsType, PlayerState } from '../player/PlayerSystem'
 import { getAdjacentHexesToStructure } from '../structures/StructureFunctions'
@@ -72,7 +88,7 @@ const placeStructure = () => {
   }
 }
 
-const rollDice = () => {
+const rollForResources = () => {
   const currentPlayer = getState(GameState).currentPlayer
 
   const dieRoll = [randomDiceRoll(), randomDiceRoll()]
@@ -141,21 +157,15 @@ export const GameSystem = defineSystem({
     }
 
     if (currentPhase === 'roll') {
-      if (buttons.KeyK?.down) rollDice()
+      if (buttons.KeyK?.down) rollForResources()
       return
     }
 
-    if (currentPhase === 'trade') {
-      // todo
-      dispatchAction(GameActions.doneTrading({ player: getMyColor() }))
-      return
-    }
-
-    if (currentPhase === 'build') {
-      // todo
-      dispatchAction(GameActions.endTurn({ player: getMyColor() }))
-      return
-    }
+    // if (currentPhase === 'trade') {
+    //   // todo
+    //   dispatchAction(GameActions.doneTrading({ player: getMyColor() }))
+    //   return
+    // }
   }
 })
 
@@ -172,7 +182,7 @@ export const getMyColor = () => {
 const Phases = ['choose-colors', 'setup-roll', 'setup-first', 'setup-second', 'roll', 'trade', 'build'] as const
 export type PhaseTypes = (typeof Phases)[number]
 
-type PlayerResources = Record<ResourceType, number>
+export type PlayerResources = Record<ResourceType, number>
 
 /**
 
@@ -376,10 +386,13 @@ export const GameState = defineState({
     rollResources: GameActions.rollResources.receive((action) => {
       const state = getMutableState(GameState)
       for (const resource in action.resources) {
-        if (!state.resources[action.player][resource].value) state.resources[action.player][resource].set(0)
+        if (!state.resources.value[action.player]) state.resources.merge({ [action.player]: {} })
+        if (!state.resources[action.player].value[resource]) state.resources[action.player].merge({ [resource]: 0 })
         state.resources[action.player][resource].set((c) => c + action.resources[resource])
       }
-      state.currentPhase.set('trade')
+      /** @todo add trading */
+      // state.currentPhase.set('trade')
+      state.currentPhase.set('build')
     }),
     doneTrading: GameActions.doneTrading.receive((action) => {
       const state = getMutableState(GameState)
@@ -413,9 +426,99 @@ export const GameState = defineState({
       }
     }, [state.currentPhase.value, state.structures])
 
-    return null
+    useEffect(() => {
+      if (state.currentPhase.value !== 'setup-second') return
+
+      return () => {
+        // give resources to players
+        // players get resources for their second settlement
+        for (const player of state.playerOrder.value.map((order) => order.player)) {
+          const resources = {} as PlayerResources
+          const secondStructureForPlayer = state.structures.value.findLast(
+            (s) => s.player === player && s.type === 'settlement'
+          )!
+          const adjacentHexes = getAdjacentHexesToStructure(secondStructureForPlayer)
+          const stringCoords = adjacentHexes.filter(_filterNull).map((coords) => `${coords.q},${coords.r}`)
+          const entities = stringCoords
+            .map((coords) => HexagonGridComponent.coordsToEntity.get(NO_PROXY)[coords])
+            .filter((e) => entityExists(e) && hasComponent(e, HexagonGridComponent))
+          const hexes = entities.map((entity) => getComponent(entity, HexagonGridComponent))
+          for (const hex of hexes) {
+            const resource = ResourceByTile[hex.tile]
+            if (!resource) continue
+            if (!resources[resource]) resources[resource] = 1
+            else resources[resource] += 1
+          }
+          dispatchAction(
+            GameActions.rollResources({
+              player,
+              resources
+            })
+          )
+        }
+      }
+    }, [state.currentPhase.value])
+
+    const viewerEntity = useMutableState(EngineState).viewerEntity.value
+
+    if (!viewerEntity) return null
+
+    return <DoneButtonReactor />
   }
 })
+
+const DoneButtonReactor = () => {
+  const xrui = useHookstate(() => {
+    const entity = createXRUI(DoneButtonXRUI).entity
+
+    setComponent(entity, UUIDComponent, UUIDComponent.generateUUID())
+    setComponent(entity, NameComponent, 'Done Button XRUI')
+    setComponent(entity, TransformComponent, {
+      position: new Vector3(-0.15, -0.2, -0.5),
+      scale: new Vector3().setScalar(2)
+    })
+    setComponent(entity, EntityTreeComponent, { parentEntity: getState(EngineState).viewerEntity })
+
+    return entity
+  }).value
+
+  useEffect(() => {
+    return () => {
+      removeEntity(xrui)
+    }
+  }, [])
+
+  const state = useMutableState(GameState).value
+  const currentPlayer = isCurrentPlayer(getState(EngineState).userID)
+  const isBuildPhase = state.currentPhase === 'build'
+
+  useEffect(() => {
+    setVisibleComponent(xrui, currentPlayer && isBuildPhase)
+  }, [currentPlayer && isBuildPhase])
+
+  return null
+}
+
+const DoneButtonXRUI = () => {
+  const gameState = useMutableState(GameState).value
+  const currentPlayer = isCurrentPlayer(getState(EngineState).userID)
+  const isBuildPhase = gameState.currentPhase === 'build'
+
+  // clicked as a hackfix to prevent double-clicking
+  const clicked = useHookstate(false)
+
+  const onClick = () => {
+    if (!isBuildPhase || !currentPlayer || clicked.value) return
+    clicked.set(true)
+    dispatchAction(GameActions.endTurn({ player: getMyColor() }))
+  }
+
+  useEffect(() => {
+    clicked.set(false)
+  }, [isBuildPhase])
+
+  return <button onClick={onClick}>Done</button>
+}
 
 const getNextPlayer = () => {
   const state = getState(GameState)

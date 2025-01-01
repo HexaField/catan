@@ -60,7 +60,7 @@ export const Resources = {
   Lumber: 'Lumber',
   Ore: 'Ore',
   Grain: 'Grain',
-  Pasture: 'Pasture'
+  Wool: 'Wool'
 } as const
 
 export type ResourceType = keyof typeof Resources
@@ -70,7 +70,7 @@ export const ResourceByTile = {
   Forest: Resources.Lumber,
   Mountains: Resources.Ore,
   Fields: Resources.Grain,
-  Pasture: Resources.Pasture
+  Pasture: Resources.Wool
 } as const
 
 const ChanceToDots = {
