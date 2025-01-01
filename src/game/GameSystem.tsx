@@ -17,11 +17,8 @@ import { InputComponent } from '@ir-engine/spatial/src/input/components/InputCom
 import { useEffect } from 'react'
 import { HexagonGridComponent, ResourceByTile, ResourceType } from '../hexes/HexagonGridSystem'
 import { PlayerColors, PlayerColorsType, PlayerState } from '../player/PlayerSystem'
-import {
-  getAdjacentHexesToStructure,
-  getRandomCornerCoords,
-  getRandomEdgeCoords
-} from '../structures/StructureFunctions'
+import { getAdjacentHexesToStructure } from '../structures/StructureFunctions'
+import { StructureHelperComponent, StructurePlacementState } from '../structures/StructurePlacementSystem'
 import { CornerDirection, EdgeDirection, StructureDataType, StructureState } from '../structures/StructureSystem'
 
 const _filterNull = <T extends any>(x: T | null): x is T => x !== null
@@ -51,25 +48,25 @@ const setupRoll = () => {
   dispatchAction(SetupActions.rollForOrder({ player: selfPlayer, roll }))
 }
 
-const setupBuild = () => {
+const placeStructure = () => {
   const currentPlayer = getState(GameState).currentPlayer
-  const playerStructures = getState(StructureState).structures.filter((s) => s.player === currentPlayer)
-  if (playerStructures.length % 2 === 0) {
-    // place settlement
-    const randomCoords = getRandomCornerCoords()
+  const { active, selectedStructure } = getState(StructurePlacementState)
+  if (!active || !selectedStructure) return
+  getMutableState(StructurePlacementState).active.set('')
+  const { coords, direction } = getComponent(selectedStructure, StructureHelperComponent)
+  const isCorner = direction === 'N' || direction === 'S'
+  if (isCorner) {
     dispatchAction(
       GameActions.buildSettlement({
         player: currentPlayer,
-        coords: randomCoords
+        coords: { q: coords.q, r: coords.r, direction: direction as CornerDirection }
       })
     )
-  } else if (playerStructures.length % 2 === 1) {
-    // place road
-    const randomCoords = getRandomEdgeCoords()
+  } else {
     dispatchAction(
       GameActions.buildRoad({
         player: currentPlayer,
-        coords: randomCoords
+        coords: { q: coords.q, r: coords.r, direction: direction as EdgeDirection }
       })
     )
   }
@@ -139,7 +136,7 @@ export const GameSystem = defineSystem({
     if (!isCurrentPlayer(getState(EngineState).userID)) return
 
     if (currentPhase === 'setup-first' || currentPhase === 'setup-second') {
-      if (buttons.KeyK?.down) setupBuild()
+      if (buttons.PrimaryClick?.up) placeStructure()
       return
     }
 
@@ -162,10 +159,11 @@ export const GameSystem = defineSystem({
   }
 })
 
-const isCurrentPlayer = (userID: UserID) => {
+export const isCurrentPlayer = (userID: UserID) => {
   return getState(GameState).playerColors[getState(GameState).currentPlayer] === userID
 }
-const getMyColor = () => {
+
+export const getMyColor = () => {
   const userID = getState(EngineState).userID
   const playerColors = getState(GameState).playerColors
   return PlayerColors.find((color) => playerColors[color] === userID)!
@@ -402,6 +400,18 @@ export const GameState = defineState({
     useEffect(() => {
       getMutableState(StructureState).structures.set(state.structures.get(NO_PROXY))
     }, [state.structures])
+
+    useEffect(() => {
+      if (state.currentPhase.value === 'setup-first' || state.currentPhase.value === 'setup-second') {
+        const currentPlayer = getState(GameState).currentPlayer
+        const playerStructures = getState(StructureState).structures.filter((s) => s.player === currentPlayer)
+        if (playerStructures.length % 2 === 0) {
+          getMutableState(StructurePlacementState).active.set('settlement')
+        } else if (playerStructures.length % 2 === 1) {
+          getMutableState(StructurePlacementState).active.set('road')
+        }
+      }
+    }, [state.currentPhase.value, state.structures])
 
     return null
   }

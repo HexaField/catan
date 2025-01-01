@@ -44,3 +44,121 @@ export const getRandomEdgeCoords = () => {
   const direction = Math.random() > 0.5 ? 'E' : Math.random() > 0.5 ? 'SE' : 'SW'
   return { q, r, direction } as { q: number; r: number; direction: EdgeDirection }
 }
+/**
+ * Returns the four edges adjacent to an edge.
+ * - in clockwise order
+ */
+export const getAdjacentEdgesToEdge = (coords: {
+  q: number
+  r: number
+  direction: EdgeDirection
+}): { q: number; r: number; direction: EdgeDirection }[] => {
+  const { q, r, direction } = coords
+
+  switch (direction) {
+    case 'E':
+      return [
+        { q, r, direction: 'SE' }, // below left
+        { q: q + 1, r, direction: 'SW' }, // below right
+        { q: q + 1, r: r - 1, direction: 'SE' }, // above right
+        { q: q + 1, r: r - 1, direction: 'SW' } // above left
+      ]
+    case 'SE':
+      return [
+        { q, r, direction: 'E' }, // above
+        { q: q + 1, r, direction: 'SW' }, //  right
+        { q: -1, r: r + 1, direction: 'E' }, // below
+        { q, r, direction: 'SW' }
+      ]
+    case 'SW':
+      return [
+        { q, r, direction: 'SE' }, // right
+        { q: q - 1, r: r + 1, direction: 'E' }, // below
+        { q: -1, r, direction: 'E' }, // above left
+        { q: q - 1, r, direction: 'SE' } // left
+      ]
+  }
+}
+/**
+ * Returns the two corners adjacent to an edge.
+ * - in clockwise order
+ */
+export const getAdjacentCornersToEdge = (coords: {
+  q: number
+  r: number
+  direction: EdgeDirection
+}): { q: number; r: number; direction: CornerDirection }[] => {
+  const { q, r, direction } = coords
+
+  switch (direction) {
+    case 'E':
+      return [
+        { q: q + 1, r: r - 1, direction: 'S' }, // above
+        { q, r: r + 1, direction: 'N' } // below
+      ]
+    case 'SE':
+      return [
+        { q: q + 1, r, direction: 'N' }, // top right
+        { q, r, direction: 'S' } // bottom left
+      ]
+    case 'SW':
+      return [
+        { q, r, direction: 'S' }, // bottom right
+        { q: q - 1, r: r + 1, direction: 'N' } // top left
+      ]
+  }
+}
+
+/**
+ * Returns the three edges adjacent to a corner.
+ * - in clockwise order
+ */
+export const getAdjacentEdgesToCorner = (coords: {
+  q: number
+  r: number
+  direction: CornerDirection
+}): { q: number; r: number; direction: EdgeDirection }[] => {
+  const { q, r, direction } = coords
+
+  switch (direction) {
+    case 'N':
+      return [
+        { q, r: r - 1, direction: 'E' }, // above
+        { q: q + 1, r: r - 1, direction: 'SW' }, // right
+        { q, r: r - 1, direction: 'SE' } // left
+      ]
+    case 'S':
+      return [
+        { q, r, direction: 'SE' }, // right
+        { q: q - 1, r: r + 1, direction: 'E' }, // below
+        { q, r, direction: 'SW' } // left
+      ]
+  }
+}
+
+/**
+ * Returns the three corners adjacent to a corner.
+ * - in clockwise order
+ */
+export const getAdjacentCornersToCorner = (coords: {
+  q: number
+  r: number
+  direction: CornerDirection
+}): { q: number; r: number; direction: CornerDirection }[] => {
+  const { q, r, direction } = coords
+
+  switch (direction) {
+    case 'N':
+      return [
+        { q: q + 1, r: r - 2, direction: 'S' }, // above
+        { q: q + 1, r: r - 1, direction: 'S' }, // right
+        { q, r: r - 1, direction: 'S' } // left
+      ]
+    case 'S':
+      return [
+        { q, r: r + 1, direction: 'N' }, // right
+        { q: q - 1, r: r + 2, direction: 'N' }, // below
+        { q: q - 1, r: r + 1, direction: 'N' } // left
+      ]
+  }
+}

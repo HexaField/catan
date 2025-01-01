@@ -1,6 +1,6 @@
 import {
   Entity,
-  PresentationSystemGroup,
+  InputSystemGroup,
   QueryReactor,
   S,
   UUIDComponent,
@@ -27,14 +27,21 @@ import { VisibleComponent } from '@ir-engine/spatial/src/renderer/components/Vis
 import { EntityTreeComponent } from '@ir-engine/spatial/src/transform/components/EntityTree'
 import React, { useEffect } from 'react'
 import { BoxGeometry, DoubleSide, Mesh, MeshBasicMaterial, Quaternion, SphereGeometry, Vector3 } from 'three'
+import { getMyColor, isCurrentPlayer } from '../game/GameSystem'
 import { hexRadius, hexWidth } from '../hexes/HexagonGridConstants'
 import { axialToPixel } from '../hexes/HexagonGridFunctions'
 import { HexagonGridComponent, vertices } from '../hexes/HexagonGridSystem'
-import { EdgeDirection, settlementGeometry } from './StructureSystem'
+import {
+  getAdjacentCornersToCorner,
+  getAdjacentCornersToEdge,
+  getAdjacentEdgesToCorner,
+  getAdjacentEdgesToEdge
+} from './StructureFunctions'
+import { CornerDirection, EdgeDirection, StructureState, settlementGeometry } from './StructureSystem'
 
-// const HelperLayer = 1
+const helpersVisible = false
 
-const StructureHelperComponent = defineComponent({
+export const StructureHelperComponent = defineComponent({
   name: 'StructureHelperComponent',
   schema: S.Object({
     coords: S.Object({
@@ -47,9 +54,10 @@ const StructureHelperComponent = defineComponent({
 
 const structureHelperQuery = defineQuery([StructureHelperComponent, MeshComponent])
 
-const getSelectedHelper = () => {
-  const helpers = structureHelperQuery()
+const getValidSelectedHelper = () => {
+  if (!isCurrentPlayer(getState(EngineState).userID)) return
 
+  const helpers = structureHelperQuery()
   if (!helpers.length) return
 
   const inputSources = helpers
@@ -67,20 +75,85 @@ const getSelectedHelper = () => {
 
   if (!intersections.length) return
 
-  return intersections[0]?.entity
+  const selectedEntity = intersections[0]?.entity
+
+  if (!selectedEntity) return
+
+  const active = getState(StructurePlacementState).active
+
+  // validate placement
+  const helperComponent = getComponent(selectedEntity, StructureHelperComponent)
+
+  const isRoad =
+    helperComponent.direction === 'E' || helperComponent.direction === 'SE' || helperComponent.direction === 'SW'
+
+  if (isRoad && !active.includes('road')) return
+  if (!isRoad && active.includes('road')) return
+
+  const coords = {
+    q: helperComponent.coords.q,
+    r: helperComponent.coords.r,
+    direction: helperComponent.direction as CornerDirection & EdgeDirection
+  }
+
+  // ensure no structure is already placed here, or within 1 edge of here
+  /** @todo this can be optimized by caching the structure locations */
+
+  const structures = getState(StructureState).structures
+  const existingStructure = structures.find(
+    (structure) =>
+      structure.coords.q === coords.q &&
+      structure.coords.r === coords.r &&
+      structure.coords.direction === coords.direction
+  )
+  if (existingStructure) {
+    if (!isRoad && !active.includes('city')) return
+
+    /** @todo upgrade city */
+    return // return selectedEntity
+  }
+
+  const coordsMatchStructure = (c: typeof coords) =>
+    structures.filter(
+      (structure) =>
+        structure.coords.q === c.q && structure.coords.r === c.r && structure.coords.direction === c.direction
+    )
+
+  const adjacentRoadCoords = isRoad ? getAdjacentEdgesToEdge(coords) : getAdjacentEdgesToCorner(coords)
+  const adjacentCornerCoords = isRoad ? getAdjacentCornersToEdge(coords) : getAdjacentCornersToCorner(coords)
+  const adjacentRoads = adjacentRoadCoords.map(coordsMatchStructure).flat()
+  const adjacentCorners = adjacentCornerCoords.map(coordsMatchStructure).flat()
+  // const myRoads = structures.filter((structure) => structure.type === 'road' && structure.player === myColor)
+  // const mySettlements = structures.filter((structure) => structure.type !== 'road' && structure.player === myColor)
+
+  const myColor = getMyColor()
+
+  if (isRoad) {
+    // road requirement is that there a road within 1 edge or a settlement within 1 corner
+    const hasAdjacentRoad = adjacentRoads.find((edge) => myColor === edge.player)
+    const hasAdjacentCorner = adjacentCorners.find((corner) => myColor === corner.player)
+    if (!hasAdjacentRoad && !hasAdjacentCorner) return
+  } else {
+    // settlement requirement is that there is no settlement within 1 corner
+    const hasAdjacentCorner = adjacentCorners.length > 0
+    if (hasAdjacentCorner) return
+  }
+
+  return selectedEntity
 }
 
-const StructurePlacementState = defineState({
+export const StructurePlacementState = defineState({
   name: 'StructurePlacementState',
   initial: {
+    active: '' as '' | 'settlement' | 'city' | 'road',
     selectedStructure: UndefinedEntity
   },
 
   reactor: () => {
-    const selectedStructure = useMutableState(StructurePlacementState).selectedStructure.value
+    const { selectedStructure, active } = useMutableState(StructurePlacementState).value
 
     useEffect(() => {
-      if (!selectedStructure) return
+      if (!selectedStructure || !active) return
 
       const structureHelper = getComponent(selectedStructure, StructureHelperComponent)
 
@@ -131,17 +204,17 @@ const StructurePlacementState = defineState({
       return () => {
         removeEntity(structureEntity)
       }
-    }, [selectedStructure])
+    }, [selectedStructure, active])
   }
 })
 
 export const StructurePlacementSystem = defineSystem({
   uuid: 'hexafield.catan.StructurePlacementSystem',
-  insert: { after: PresentationSystemGroup },
+  insert: { with: InputSystemGroup },
 
   execute: () => {
     /** @todo make this networked */
-    const helper = getSelectedHelper() ?? UndefinedEntity
+    const helper = getValidSelectedHelper() ?? UndefinedEntity
     getMutableState(StructurePlacementState).selectedStructure.set(helper)
   },
 
@@ -179,7 +252,10 @@ const createEdgeHelper = (coords: { q: number; r: number }, direction: EdgeDirec
   setComponent(
     entity,
     MeshComponent,
-    new Mesh(new BoxGeometry(0.2, 0.2), new MeshBasicMaterial({ side: DoubleSide, color: 'red', visible: false }))
+    new Mesh(
+      new BoxGeometry(0.2, 0.2),
+      new MeshBasicMaterial({ side: DoubleSide, color: 'red', visible: helpersVisible })
+    )
   )
   addObjectToGroup(entity, getComponent(entity, MeshComponent))
 
@@ -189,7 +265,7 @@ const createEdgeHelper = (coords: { q: number; r: number }, direction: EdgeDirec
   return entity
 }
 
-const createCornerHelper = (coords: { q: number; r: number }, direction: 'N' | 'S') => {
+const createCornerHelper = (coords: { q: number; r: number }, direction: CornerDirection) => {
   const offset = axialToPixel(coords, hexWidth, hexRadius)
 
   const vertexIndex = direction === 'N' ? 4 : 1
@@ -206,7 +282,7 @@ const createCornerHelper = (coords: { q: number; r: number }, direction: 'N' | '
   setComponent(
     entity,
     MeshComponent,
-    new Mesh(new SphereGeometry(), new MeshBasicMaterial({ side: DoubleSide, color: 'blue', visible: false }))
+    new Mesh(new SphereGeometry(), new MeshBasicMaterial({ side: DoubleSide, color: 'blue', visible: helpersVisible }))
   )
   addObjectToGroup(entity, getComponent(entity, MeshComponent))
 
