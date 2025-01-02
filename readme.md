@@ -13,7 +13,7 @@ Designed with fun and not security in mind!
 - [x] Dice roll, turns and resources
 - [x] Placement of structures
 - [x] Turn Done & Resources UI
-- [ ] Purchase structures UI
+- [x] Purchase structures UI
 - [ ] Resource Trading UI
 - [ ] Dice Roll UI
 - [ ] Robber
