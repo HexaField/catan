@@ -9,6 +9,7 @@ import './hexes/HexagonGridSystem'
 import './player/PlayerSystem'
 import './resources/ResourceSystem'
 import './structures/StructurePlacementSystem'
+import './structures/StructurePurchaseSystem'
 import './structures/StructureSystem'
 
 import { getComponent, setComponent } from '@ir-engine/ecs'

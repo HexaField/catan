@@ -1,5 +1,6 @@
 import {
   AnimationSystemGroup,
+  PresentationSystemGroup,
   UUIDComponent,
   UndefinedEntity,
   createEntity,
@@ -25,7 +26,7 @@ import { PlayerColors, PlayerColorsType } from '../player/PlayerSystem'
 
 export const ResourceSystem = defineSystem({
   uuid: 'hexafield.catan.ResourceSystem',
-  insert: { with: AnimationSystemGroup },
+  insert: { after: PresentationSystemGroup },
 
   reactor: () => {
     const gameState = useMutableState(GameState)

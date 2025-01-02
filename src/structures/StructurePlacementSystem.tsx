@@ -146,7 +146,7 @@ const getValidSelectedHelper = () => {
 export const StructurePlacementState = defineState({
   name: 'StructurePlacementState',
   initial: {
-    active: '' as '' | 'settlement' | 'city' | 'road',
+    active: [] as Array<'settlement' | 'city' | 'road'>,
     selectedStructure: UndefinedEntity
   },
 
@@ -154,7 +154,7 @@ export const StructurePlacementState = defineState({
     const { selectedStructure, active } = useMutableState(StructurePlacementState).value
 
     useEffect(() => {
-      if (!selectedStructure || !active) return
+      if (!selectedStructure || !active.length) return
 
       const structureHelper = getComponent(selectedStructure, StructureHelperComponent)
 

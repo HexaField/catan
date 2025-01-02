@@ -28,6 +28,9 @@ import dotenv from 'dotenv'
 import fs from 'fs'
 import path from 'path'
 import { defineConfig, UserConfig } from 'vite'
+import viteCompression from 'vite-plugin-compression2'
+import { nodePolyfills } from 'vite-plugin-node-polyfills'
+import svgr from 'vite-plugin-svgr'
 import manifestJson from './manifest.json'
 
 const cwd = process.cwd()
@@ -80,7 +83,15 @@ export default defineConfig(async ({ command }) => {
         target: 'es2020'
       }
     },
-    plugins: [],
+    plugins: [
+      svgr(),
+      nodePolyfills(),
+      viteCompression({
+        include: /\.(js|mjs|json|css)$/i,
+        algorithm: 'brotliCompress',
+        deleteOriginalAssets: true
+      })
+    ].filter(Boolean),
     build: {
       target: 'esnext',
       sourcemap: process.env.VITE_SOURCEMAPS === 'true' ? true : false,

@@ -19,6 +19,7 @@ import {
   getMutableState,
   getState,
   matches,
+  none,
   useHookstate,
   useMutableState
 } from '@ir-engine/hyperflux'
@@ -61,17 +62,18 @@ const setupRoll = () => {
   const gameState = getState(GameState)
   if (gameState.playerOrder.find((player) => player.player === selfPlayer)) return
   const roll = [randomDiceRoll(), randomDiceRoll()]
+  console.log('Rolled a', roll[0] + roll[1])
   dispatchAction(SetupActions.rollForOrder({ player: selfPlayer, roll }))
 }
 
 const placeStructure = () => {
   const currentPlayer = getState(GameState).currentPlayer
   const { active, selectedStructure } = getState(StructurePlacementState)
-  if (!active || !selectedStructure) return
-  getMutableState(StructurePlacementState).active.set('')
+  if (!active.length || !selectedStructure) return
   const { coords, direction } = getComponent(selectedStructure, StructureHelperComponent)
   const isCorner = direction === 'N' || direction === 'S'
   if (isCorner) {
+    getMutableState(StructurePlacementState).active[active.indexOf('settlement')].set(none)
     dispatchAction(
       GameActions.buildSettlement({
         player: currentPlayer,
@@ -79,6 +81,7 @@ const placeStructure = () => {
       })
     )
   } else {
+    getMutableState(StructurePlacementState).active[active.indexOf('road')].set(none)
     dispatchAction(
       GameActions.buildRoad({
         player: currentPlayer,
@@ -151,7 +154,7 @@ export const GameSystem = defineSystem({
 
     if (!isCurrentPlayer(getState(EngineState).userID)) return
 
-    if (currentPhase === 'setup-first' || currentPhase === 'setup-second') {
+    if (currentPhase === 'setup-first' || currentPhase === 'setup-second' || currentPhase === 'build') {
       if (buttons.PrimaryClick?.up) placeStructure()
       return
     }
@@ -247,14 +250,20 @@ export const GameActions = {
     $cache: true,
     $topic: NetworkTopics.world
   }),
-
   doneTrading: defineAction({
     type: 'hexafield.catan.GameActions.doneTrading',
     player: matchesPlayerColors,
     $cache: true,
     $topic: NetworkTopics.world
   }),
-
+  purchaseItem: defineAction({
+    type: 'hexafield.catan.GameActions.purchaseItem',
+    player: matchesPlayerColors,
+    // item: matches.literals('road', 'settlement', 'city', 'development-card'),
+    cost: matchesResources,
+    $cache: true,
+    $topic: NetworkTopics.world
+  }),
   buildRoad: defineAction({
     type: 'hexafield.catan.GameActions.buildRoad',
     player: matchesPlayerColors,
@@ -262,7 +271,6 @@ export const GameActions = {
     $cache: true,
     $topic: NetworkTopics.world
   }),
-
   buildSettlement: defineAction({
     type: 'hexafield.catan.GameActions.buildSettlement',
     player: matchesPlayerColors,
@@ -270,7 +278,6 @@ export const GameActions = {
     $cache: true,
     $topic: NetworkTopics.world
   }),
-
   buildCity: defineAction({
     type: 'hexafield.catan.GameActions.buildCity',
     player: matchesPlayerColors,
@@ -278,7 +285,6 @@ export const GameActions = {
     $cache: true,
     $topic: NetworkTopics.world
   }),
-
   endTurn: defineAction({
     type: 'hexafield.catan.GameActions.endTurn',
     player: matchesPlayerColors,
@@ -322,6 +328,14 @@ export const GameState = defineState({
           state.currentPlayer.set(state.playerOrder[0].player.value)
           state.currentPhase.set('setup-first')
         }
+      }
+    }),
+    purchaseItem: GameActions.purchaseItem.receive((action) => {
+      const state = getMutableState(GameState)
+      const currentPlayerResources = state.resources[action.player]
+      for (const resource in action.cost) {
+        if (!currentPlayerResources.value[resource]) currentPlayerResources[resource].set(0)
+        currentPlayerResources[resource].set((current) => current - action.cost[resource])
       }
     }),
     buildSettlement: GameActions.buildSettlement.receive((action) => {
@@ -419,9 +433,9 @@ export const GameState = defineState({
         const currentPlayer = getState(GameState).currentPlayer
         const playerStructures = getState(StructureState).structures.filter((s) => s.player === currentPlayer)
         if (playerStructures.length % 2 === 0) {
-          getMutableState(StructurePlacementState).active.set('settlement')
+          getMutableState(StructurePlacementState).active.set(['settlement'])
         } else if (playerStructures.length % 2 === 1) {
-          getMutableState(StructurePlacementState).active.set('road')
+          getMutableState(StructurePlacementState).active.set(['road'])
         }
       }
     }, [state.currentPhase.value, state.structures])

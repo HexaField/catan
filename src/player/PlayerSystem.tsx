@@ -1,4 +1,4 @@
-import { InputSystemGroup, PresentationSystemGroup, defineSystem } from '@ir-engine/ecs'
+import { InputSystemGroup, defineSystem } from '@ir-engine/ecs'
 import {
   UserID,
   defineAction,
@@ -83,7 +83,8 @@ export const PlayerState = defineState({
 
   receptors: {
     joinGame: PlayerActions.playerJoin.receive((action) => {
-      getMutableState(PlayerState).players.merge([action.userID])
+      if (!getState(PlayerState).players.includes(action.userID))
+        getMutableState(PlayerState).players.merge([action.userID])
     }),
     playersReady: PlayerActions.playersReady.receive(() => {
       getMutableState(PlayerState).playersReady.set(true)
