@@ -133,8 +133,8 @@ const Section = (props: { structure: string; resources: ResourceType[] }) => {
 
   const onClick = () => {
     if (clicked.value) return
-    if (!hasResources) return
     clicked.set(true)
+    if (!hasResources) return
     dispatchAction(
       GameActions.purchaseItem({
         player: gameState.currentPlayer,
@@ -144,7 +144,6 @@ const Section = (props: { structure: string; resources: ResourceType[] }) => {
     if (props.structure === 'Road') getMutableState(StructurePlacementState).active.merge(['road'])
     if (props.structure === 'Settlement') getMutableState(StructurePlacementState).active.merge(['settlement'])
     if (props.structure === 'City') getMutableState(StructurePlacementState).active.merge(['city'])
-    console.log('clicked')
   }
 
   useEffect(() => {

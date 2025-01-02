@@ -8,12 +8,13 @@ Designed with fun and not security in mind!
 
 - [x] Basic hex construction
 - [x] Chance indicators and starter game
-- [x] Settlement, cities and roads
+- [x] Settlements and roads
 - [x] P2P Signaling server and client connectivity
 - [x] Dice roll, turns and resources
 - [x] Placement of structures
 - [x] Turn Done & Resources UI
 - [x] Purchase structures UI
+- [ ] City upgrades
 - [ ] Resource Trading UI
 - [ ] Dice Roll UI
 - [ ] Robber

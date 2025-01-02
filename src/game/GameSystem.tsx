@@ -369,26 +369,6 @@ export const GameState = defineState({
       } else if (state.currentPhase.value === 'setup-second') {
         const currentPlayerIndex = state.playerOrder.value.findIndex((order) => order.player === action.player)
         if (currentPlayerIndex === 0) {
-          // a little dangerous, but with our design we can assume that the board does not change once the game starts
-          for (const player of state.playerOrder.value.map((order) => order.player)) {
-            const resources = {} as PlayerResources
-            const secondStructureForPlayer = state.structures.value.findLast(
-              (s) => s.player === player && s.type === 'settlement'
-            )!
-            const adjacentHexes = getAdjacentHexesToStructure(secondStructureForPlayer)
-            const stringCoords = adjacentHexes.filter(_filterNull).map((coords) => `${coords.q},${coords.r}`)
-            const entities = stringCoords
-              .map((coords) => HexagonGridComponent.coordsToEntity.get(NO_PROXY)[coords])
-              .filter((e) => entityExists(e) && hasComponent(e, HexagonGridComponent))
-            const hexes = entities.map((entity) => getComponent(entity, HexagonGridComponent))
-            for (const hex of hexes) {
-              const resource = ResourceByTile[hex.tile]
-              if (!resource) continue
-              if (!resources[resource]) resources[resource] = 1
-              else resources[resource] += 1
-            }
-            state.resources.merge({ [player]: resources })
-          }
           state.currentPhase.set('roll')
         } else {
           const previousPlayerIndex = currentPlayerIndex - 1
@@ -445,31 +425,31 @@ export const GameState = defineState({
 
       return () => {
         // give resources to players
-        // players get resources for their second settlement
-        for (const player of state.playerOrder.value.map((order) => order.player)) {
-          const resources = {} as PlayerResources
-          const secondStructureForPlayer = state.structures.value.findLast(
-            (s) => s.player === player && s.type === 'settlement'
-          )!
-          const adjacentHexes = getAdjacentHexesToStructure(secondStructureForPlayer)
-          const stringCoords = adjacentHexes.filter(_filterNull).map((coords) => `${coords.q},${coords.r}`)
-          const entities = stringCoords
-            .map((coords) => HexagonGridComponent.coordsToEntity.get(NO_PROXY)[coords])
-            .filter((e) => entityExists(e) && hasComponent(e, HexagonGridComponent))
-          const hexes = entities.map((entity) => getComponent(entity, HexagonGridComponent))
-          for (const hex of hexes) {
-            const resource = ResourceByTile[hex.tile]
-            if (!resource) continue
-            if (!resources[resource]) resources[resource] = 1
-            else resources[resource] += 1
-          }
-          dispatchAction(
-            GameActions.rollResources({
-              player,
-              resources
-            })
-          )
+        // players each get resources for their second settlement
+        // since all players have this reactor, we only need to do this for ourselves
+        const player = getMyColor()
+        const resources = {} as PlayerResources
+        const secondStructureForPlayer = state.structures.value.findLast(
+          (s) => s.player === player && s.type === 'settlement'
+        )!
+        const adjacentHexes = getAdjacentHexesToStructure(secondStructureForPlayer)
+        const stringCoords = adjacentHexes.filter(_filterNull).map((coords) => `${coords.q},${coords.r}`)
+        const entities = stringCoords
+          .map((coords) => HexagonGridComponent.coordsToEntity.get(NO_PROXY)[coords])
+          .filter((e) => entityExists(e) && hasComponent(e, HexagonGridComponent))
+        const hexes = entities.map((entity) => getComponent(entity, HexagonGridComponent))
+        for (const hex of hexes) {
+          const resource = ResourceByTile[hex.tile]
+          if (!resource) continue
+          if (!resources[resource]) resources[resource] = 1
+          else resources[resource] += 1
         }
+        dispatchAction(
+          GameActions.rollResources({
+            player,
+            resources
+          })
+        )
       }
     }, [state.currentPhase.value])
 

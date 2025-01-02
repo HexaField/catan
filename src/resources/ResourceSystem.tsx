@@ -1,5 +1,4 @@
 import {
-  AnimationSystemGroup,
   PresentationSystemGroup,
   UUIDComponent,
   UndefinedEntity,
@@ -43,6 +42,8 @@ export const ResourceSystem = defineSystem({
   }
 })
 
+const invertSort = (a, b) => (a > b ? -1 : a < b ? 1 : 0)
+
 const ResourceReactor = (props: { myColor: PlayerColorsType }) => {
   const { myColor } = props
 
@@ -51,9 +52,9 @@ const ResourceReactor = (props: { myColor: PlayerColorsType }) => {
   if (!resources[myColor]) return null
 
   // turn the resources object into an array with duplicated entries for each resource
-  const indexIterator = Object.entries(resources[myColor]).flatMap(([resource, count]) =>
-    Array(count).fill(resource)
-  ) as ResourceType[]
+  const indexIterator = Object.entries(resources[myColor])
+    .flatMap(([resource, count]) => Array(count).fill(resource))
+    .sort(invertSort) as ResourceType[]
 
   return (
     <>
