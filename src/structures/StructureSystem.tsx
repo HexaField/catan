@@ -3,7 +3,6 @@ import {
   UUIDComponent,
   createEntity,
   defineSystem,
-  getComponent,
   removeEntity,
   setComponent,
   useQuery
@@ -13,7 +12,6 @@ import { TransformComponent } from '@ir-engine/spatial'
 import { EngineState } from '@ir-engine/spatial/src/EngineState'
 import { NameComponent } from '@ir-engine/spatial/src/common/NameComponent'
 import { mergeBufferGeometries } from '@ir-engine/spatial/src/common/classes/BufferGeometryUtils'
-import { addObjectToGroup } from '@ir-engine/spatial/src/renderer/components/GroupComponent'
 import { MeshComponent } from '@ir-engine/spatial/src/renderer/components/MeshComponent'
 import { VisibleComponent } from '@ir-engine/spatial/src/renderer/components/VisibleComponent'
 import { EntityTreeComponent } from '@ir-engine/spatial/src/transform/components/EntityTree'
@@ -114,7 +112,6 @@ const StructureReactor = (props: { data: StructureDataType }) => {
         MeshComponent,
         new Mesh(settlementGeometry.clone(), new MeshLambertMaterial({ side: DoubleSide, color: data.player }))
       )
-      addObjectToGroup(settlementEntity, getComponent(settlementEntity, MeshComponent))
 
       return () => {
         removeEntity(settlementEntity)
@@ -152,7 +149,6 @@ const StructureReactor = (props: { data: StructureDataType }) => {
         MeshComponent,
         new Mesh(roadGeometry, new MeshLambertMaterial({ side: DoubleSide, color: data.player }))
       )
-      addObjectToGroup(roadEntity, getComponent(roadEntity, MeshComponent))
 
       return () => {
         removeEntity(roadEntity)

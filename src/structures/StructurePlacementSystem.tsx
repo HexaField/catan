@@ -22,7 +22,6 @@ import { EngineState } from '@ir-engine/spatial/src/EngineState'
 import { NameComponent } from '@ir-engine/spatial/src/common/NameComponent'
 import { InputComponent } from '@ir-engine/spatial/src/input/components/InputComponent'
 import { InputSourceComponent } from '@ir-engine/spatial/src/input/components/InputSourceComponent'
-import { addObjectToGroup } from '@ir-engine/spatial/src/renderer/components/GroupComponent'
 import { MeshComponent } from '@ir-engine/spatial/src/renderer/components/MeshComponent'
 import { VisibleComponent } from '@ir-engine/spatial/src/renderer/components/VisibleComponent'
 import { EntityTreeComponent } from '@ir-engine/spatial/src/transform/components/EntityTree'
@@ -200,7 +199,6 @@ export const StructurePlacementState = defineState({
           new MeshBasicMaterial({ color: 'green', transparent: true, opacity: 0.5 })
         )
       )
-      addObjectToGroup(structureEntity, getComponent(structureEntity, MeshComponent))
 
       return () => {
         removeEntity(structureEntity)
@@ -258,7 +256,6 @@ const createEdgeHelper = (coords: { q: number; r: number }, direction: EdgeDirec
       new MeshBasicMaterial({ side: DoubleSide, color: 'red', visible: helpersVisible })
     )
   )
-  addObjectToGroup(entity, getComponent(entity, MeshComponent))
 
   setComponent(entity, StructureHelperComponent, { coords, direction })
   setComponent(entity, InputComponent, { activationDistance: Infinity })
@@ -285,7 +282,6 @@ const createCornerHelper = (coords: { q: number; r: number }, direction: CornerD
     MeshComponent,
     new Mesh(new SphereGeometry(), new MeshBasicMaterial({ side: DoubleSide, color: 'blue', visible: helpersVisible }))
   )
-  addObjectToGroup(entity, getComponent(entity, MeshComponent))
 
   setComponent(entity, StructureHelperComponent, { coords, direction })
   setComponent(entity, InputComponent, { activationDistance: Infinity })

@@ -1,4 +1,5 @@
 import {
+  Entity,
   PresentationSystemGroup,
   UUIDComponent,
   UndefinedEntity,
@@ -12,13 +13,15 @@ import { useTexture } from '@ir-engine/engine/src/assets/functions/resourceLoade
 import { getState, useHookstate, useMutableState } from '@ir-engine/hyperflux'
 import { TransformComponent } from '@ir-engine/spatial'
 import { EngineState } from '@ir-engine/spatial/src/EngineState'
+import { CameraComponent } from '@ir-engine/spatial/src/camera/components/CameraComponent'
 import { NameComponent } from '@ir-engine/spatial/src/common/NameComponent'
-import { addObjectToGroup } from '@ir-engine/spatial/src/renderer/components/GroupComponent'
 import { MeshComponent } from '@ir-engine/spatial/src/renderer/components/MeshComponent'
 import { VisibleComponent } from '@ir-engine/spatial/src/renderer/components/VisibleComponent'
+import { ComputedTransformComponent } from '@ir-engine/spatial/src/transform/components/ComputedTransformComponent'
 import { EntityTreeComponent } from '@ir-engine/spatial/src/transform/components/EntityTree'
+import { ObjectFitFunctions } from '@ir-engine/spatial/src/transform/functions/ObjectFitFunctions'
 import React, { useEffect } from 'react'
-import { DoubleSide, Mesh, MeshBasicMaterial, PlaneGeometry, Quaternion, SRGBColorSpace, Vector3 } from 'three'
+import { DoubleSide, Mesh, MeshBasicMaterial, PlaneGeometry, Quaternion, SRGBColorSpace, Vector2, Vector3 } from 'three'
 import { GameState } from '../game/GameSystem'
 import { ResourceType } from '../hexes/HexagonGridSystem'
 import { PlayerColors, PlayerColorsType } from '../player/PlayerSystem'
@@ -44,12 +47,50 @@ export const ResourceSystem = defineSystem({
 
 const invertSort = (a, b) => (a > b ? -1 : a < b ? 1 : 0)
 
+const contentSize = new Vector2(0.3, 0.4)
+const contentScale = 0.1
+
 const ResourceReactor = (props: { myColor: PlayerColorsType }) => {
   const { myColor } = props
 
   const resources = useMutableState(GameState).resources.value
 
-  if (!resources[myColor]) return null
+  const parentEntity = useHookstate(UndefinedEntity)
+
+  useEffect(() => {
+    if (!resources[myColor]) return
+
+    const entity = createEntity()
+    setComponent(entity, UUIDComponent, UUIDComponent.generateUUID())
+    setComponent(entity, NameComponent, 'Resource Cards Parent')
+    setComponent(entity, TransformComponent)
+    setComponent(entity, VisibleComponent)
+    setComponent(entity, EntityTreeComponent, { parentEntity: getState(EngineState).originEntity })
+    setComponent(entity, ComputedTransformComponent, {
+      referenceEntities: [getState(EngineState).viewerEntity],
+      computeFunction: () => {
+        const camera = getComponent(getState(EngineState).viewerEntity, CameraComponent)
+        const distance = camera.near * 2 // 10% in front of camera
+        ObjectFitFunctions.snapToSideOfScreen(
+          entity,
+          contentSize,
+          contentScale,
+          distance,
+          0.9,
+          -1,
+          getState(EngineState).viewerEntity
+        )
+      }
+    })
+
+    parentEntity.set(entity)
+    return () => {
+      removeEntity(entity)
+      parentEntity.set(UndefinedEntity)
+    }
+  }, [!!resources[myColor]])
+
+  if (!parentEntity.value) return null
 
   // turn the resources object into an array with duplicated entries for each resource
   const indexIterator = Object.entries(resources[myColor])
@@ -59,36 +100,39 @@ const ResourceReactor = (props: { myColor: PlayerColorsType }) => {
   return (
     <>
       {indexIterator.map((resource, i) => (
-        <ResourceCard key={i} resource={resource} i={i} total={indexIterator.length} />
+        <ResourceCard
+          key={i}
+          resource={resource}
+          i={i}
+          total={indexIterator.length}
+          parentEntity={parentEntity.value}
+        />
       ))}
     </>
   )
 }
 
-const ResourceCard = (props: { resource: ResourceType; i: number; total: number }) => {
+const ResourceCard = (props: { resource: ResourceType; i: number; total: number; parentEntity: Entity }) => {
   const entityState = useHookstate(UndefinedEntity)
 
   useEffect(() => {
     const entity = createEntity()
     setComponent(entity, UUIDComponent, UUIDComponent.generateUUID())
-    setComponent(entity, NameComponent, 'Resource Card')
+    setComponent(entity, NameComponent, 'Resource Card ' + props.resource + ' ' + props.i)
     setComponent(entity, TransformComponent, {
-      position: new Vector3(0.15, -0.2, -0.5),
       // splay the cards out
       rotation: new Quaternion().setFromAxisAngle(
         new Vector3(0, 0, 1),
         (props.i / props.total) * Math.PI * 0.4 - Math.PI * 0.2
-      ),
-      scale: new Vector3().setScalar(0.25)
+      )
     })
-    setComponent(entity, EntityTreeComponent, { parentEntity: getState(EngineState).viewerEntity })
+    setComponent(entity, EntityTreeComponent, { parentEntity: props.parentEntity })
     setComponent(entity, VisibleComponent)
     setComponent(
       entity,
       MeshComponent,
       new Mesh(new PlaneGeometry(0.3, 0.4).translate(0, 0.4, 0), new MeshBasicMaterial({ side: DoubleSide }))
     )
-    addObjectToGroup(entity, getComponent(entity, MeshComponent))
     entityState.set(entity)
 
     return () => {

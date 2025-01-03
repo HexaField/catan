@@ -24,19 +24,22 @@ import {
   useMutableState
 } from '@ir-engine/hyperflux'
 import { NetworkTopics, matchesUserID } from '@ir-engine/network'
-import { TransformComponent } from '@ir-engine/spatial'
 import { EngineState } from '@ir-engine/spatial/src/EngineState'
+import { CameraComponent } from '@ir-engine/spatial/src/camera/components/CameraComponent'
 import { NameComponent } from '@ir-engine/spatial/src/common/NameComponent'
 import { InputComponent } from '@ir-engine/spatial/src/input/components/InputComponent'
 import { setVisibleComponent } from '@ir-engine/spatial/src/renderer/components/VisibleComponent'
+import { ComputedTransformComponent } from '@ir-engine/spatial/src/transform/components/ComputedTransformComponent'
 import { EntityTreeComponent } from '@ir-engine/spatial/src/transform/components/EntityTree'
+import { ObjectFitFunctions } from '@ir-engine/spatial/src/transform/functions/ObjectFitFunctions'
 import React, { useEffect } from 'react'
-import { Vector3 } from 'three'
+import { Vector2 } from 'three'
 import { HexagonGridComponent, ResourceByTile, ResourceType } from '../hexes/HexagonGridSystem'
 import { PlayerColors, PlayerColorsType, PlayerState } from '../player/PlayerSystem'
 import { getAdjacentHexesToStructure } from '../structures/StructureFunctions'
 import { StructureHelperComponent, StructurePlacementState } from '../structures/StructurePlacementSystem'
 import { CornerDirection, EdgeDirection, StructureDataType, StructureState } from '../structures/StructureSystem'
+import { TransformComponent } from '@ir-engine/spatial'
 
 const _filterNull = <T extends any>(x: T | null): x is T => x !== null
 
@@ -461,17 +464,36 @@ export const GameState = defineState({
   }
 })
 
+const uiSize = new Vector2()
+const uiScale = 0.05
+
 const DoneButtonReactor = () => {
   const xrui = useHookstate(() => {
-    const entity = createXRUI(DoneButtonXRUI).entity
+    const { entity, container } = createXRUI(DoneButtonXRUI)
 
+    setComponent(entity, TransformComponent)
     setComponent(entity, UUIDComponent, UUIDComponent.generateUUID())
     setComponent(entity, NameComponent, 'Done Button XRUI')
-    setComponent(entity, TransformComponent, {
-      position: new Vector3(-0.15, -0.2, -0.5),
-      scale: new Vector3().setScalar(2)
+    setComponent(entity, EntityTreeComponent, { parentEntity: getState(EngineState).originEntity })
+    setComponent(entity, ComputedTransformComponent, {
+      referenceEntities: [getState(EngineState).viewerEntity],
+      computeFunction: () => {
+        const camera = getComponent(getState(EngineState).viewerEntity, CameraComponent)
+        const distance = camera.near * 1.1 // 10% in front of camera
+        const uiContainer = container.rootLayer.querySelector('#container')
+        if (!uiContainer) return
+        uiSize.set(uiContainer.domSize.x, uiContainer.domSize.y)
+        ObjectFitFunctions.snapToSideOfScreen(
+          entity,
+          uiSize,
+          uiScale,
+          distance,
+          -0.9,
+          -0.9,
+          getState(EngineState).viewerEntity
+        )
+      }
     })
-    setComponent(entity, EntityTreeComponent, { parentEntity: getState(EngineState).viewerEntity })
 
     return entity
   }).value
@@ -511,7 +533,11 @@ const DoneButtonXRUI = () => {
     clicked.set(false)
   }, [isBuildPhase])
 
-  return <button onClick={onClick}>Done</button>
+  return (
+    <div id="container" xr-layer="true">
+      <button onClick={onClick}>Done</button>
+    </div>
+  )
 }
 
 const getNextPlayer = () => {

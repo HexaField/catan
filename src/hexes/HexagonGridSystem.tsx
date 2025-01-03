@@ -23,7 +23,6 @@ import { EngineState } from '@ir-engine/spatial/src/EngineState'
 import { NameComponent } from '@ir-engine/spatial/src/common/NameComponent'
 import { mergeBufferGeometries } from '@ir-engine/spatial/src/common/classes/BufferGeometryUtils'
 import { RendererComponent } from '@ir-engine/spatial/src/renderer/WebGLRendererSystem'
-import { addObjectToGroup } from '@ir-engine/spatial/src/renderer/components/GroupComponent'
 import { MeshComponent } from '@ir-engine/spatial/src/renderer/components/MeshComponent'
 import { SceneComponent } from '@ir-engine/spatial/src/renderer/components/SceneComponents'
 import { VisibleComponent } from '@ir-engine/spatial/src/renderer/components/VisibleComponent'
@@ -233,7 +232,6 @@ const HexagonGridLoader = () => {
       MeshComponent,
       new Mesh(new CircleGeometry().rotateX(Math.PI / 2), new MeshBasicMaterial({ side: DoubleSide, color: 'white' }))
     )
-    addObjectToGroup(chanceBackgroundEntity, getComponent(chanceBackgroundEntity, MeshComponent))
 
     return chanceBackgroundEntity
   }).value
@@ -285,7 +283,6 @@ const HexagonGridLoader = () => {
         new MeshBasicMaterial({ side: DoubleSide, color: chance === 6 || chance === 8 ? 'red' : 'black' })
       )
     )
-    addObjectToGroup(dotsEntity, getComponent(dotsEntity, MeshComponent))
 
     return dotsEntity
   }).value
@@ -355,7 +352,6 @@ const GridBuilderReactor = (props: { parentEntity: Entity }) => {
         MeshComponent,
         new Mesh(hexGeom, new MeshBasicMaterial({ side: DoubleSide, transparent: true, opacity: 1 }))
       )
-      addObjectToGroup(entity, getComponent(entity, MeshComponent))
 
       setComponent(entity, HexagonGridComponent, { coords: { q, r }, tile, chance })
 

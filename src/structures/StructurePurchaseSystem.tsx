@@ -12,13 +12,12 @@ import { TransformComponent } from '@ir-engine/spatial'
 import { EngineState } from '@ir-engine/spatial/src/EngineState'
 import { CameraComponent } from '@ir-engine/spatial/src/camera/components/CameraComponent'
 import { NameComponent } from '@ir-engine/spatial/src/common/NameComponent'
-import { RendererComponent } from '@ir-engine/spatial/src/renderer/WebGLRendererSystem'
 import { setVisibleComponent } from '@ir-engine/spatial/src/renderer/components/VisibleComponent'
 import { ComputedTransformComponent } from '@ir-engine/spatial/src/transform/components/ComputedTransformComponent'
 import { EntityTreeComponent } from '@ir-engine/spatial/src/transform/components/EntityTree'
 import { ObjectFitFunctions } from '@ir-engine/spatial/src/transform/functions/ObjectFitFunctions'
 import React, { useEffect } from 'react'
-import { Vector2, Vector3 } from 'three'
+import { Vector2 } from 'three'
 import { GameActions, GameState, getMyColor, isCurrentPlayer } from '../game/GameSystem'
 import { ResourceType } from '../hexes/HexagonGridSystem'
 import { PlayerColors } from '../player/PlayerSystem'
@@ -43,20 +42,17 @@ export const StructurePurchaseSystem = defineSystem({
   }
 })
 
-const SCREEN_SIZE = new Vector2()
+const uiSize = new Vector2()
+const uiScale = 0.15
 
 const StructurePurchaseReactor = () => {
   const xrui = useHookstate(() => {
     const { entity, container } = createXRUI(StructurePurchaseXRUI)
 
     setComponent(entity, UUIDComponent, UUIDComponent.generateUUID())
-    setComponent(entity, NameComponent, 'Done Button XRUI')
-    setComponent(entity, TransformComponent, {
-      position: new Vector3(0, 0, -0.5),
-      scale: new Vector3().setScalar(1)
-    })
+    setComponent(entity, NameComponent, 'Purchase Structure XRUI')
+    setComponent(entity, TransformComponent)
     setComponent(entity, EntityTreeComponent, { parentEntity: getState(EngineState).originEntity })
-
     setComponent(entity, ComputedTransformComponent, {
       referenceEntities: [getState(EngineState).viewerEntity],
       computeFunction: () => {
@@ -64,17 +60,16 @@ const StructurePurchaseReactor = () => {
         const distance = camera.near * 1.1 // 10% in front of camera
         const uiContainer = container.rootLayer.querySelector('#container')
         if (!uiContainer) return
-        const uiSize = uiContainer.domSize
-        const screenSize = getComponent(getState(EngineState).viewerEntity, RendererComponent).renderer!.getSize(
-          SCREEN_SIZE
+        uiSize.set(uiContainer.domSize.x, uiContainer.domSize.y)
+        ObjectFitFunctions.snapToSideOfScreen(
+          entity,
+          uiSize,
+          uiScale,
+          distance,
+          'right',
+          'center',
+          getState(EngineState).viewerEntity
         )
-        const aspectRatio = screenSize.x / screenSize.y
-        const scaleMultiplier = aspectRatio < 1 ? 1 / aspectRatio : 1
-        const scale =
-          ObjectFitFunctions.computeContentFitScaleForCamera(distance, uiSize.x, uiSize.y, 'contain') *
-          0.25 *
-          scaleMultiplier
-        ObjectFitFunctions.attachObjectInFrontOfCamera(entity, scale, distance)
       }
     })
 

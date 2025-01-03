@@ -1,9 +1,5 @@
 import '@ir-engine/client/src/engine'
 
-import { useEngineCanvas } from '@ir-engine/client-core/src/hooks/useEngineCanvas'
-import { NetworkID, useMutableState, useReactiveRef } from '@ir-engine/hyperflux'
-import { useSpatialEngine } from '@ir-engine/spatial/src/initializeEngine'
-
 import './game/GameSystem'
 import './hexes/HexagonGridSystem'
 import './player/PlayerSystem'
@@ -12,13 +8,18 @@ import './structures/StructurePlacementSystem'
 import './structures/StructurePurchaseSystem'
 import './structures/StructureSystem'
 
+import React, { useEffect } from 'react'
+import { Vector3 } from 'three'
+
+import Debug from '@ir-engine/client-core/src/components/Debug'
 import { getComponent, setComponent } from '@ir-engine/ecs'
+import { NetworkID, useMutableState, useReactiveRef } from '@ir-engine/hyperflux'
 import { EngineState } from '@ir-engine/spatial/src/EngineState'
 import { CameraComponent } from '@ir-engine/spatial/src/camera/components/CameraComponent'
 import { CameraOrbitComponent } from '@ir-engine/spatial/src/camera/components/CameraOrbitComponent'
+import { useSpatialEngine } from '@ir-engine/spatial/src/initializeEngine'
 import { InputComponent } from '@ir-engine/spatial/src/input/components/InputComponent'
-import React, { useEffect } from 'react'
-import { Vector3 } from 'three'
+import { useEngineCanvas } from '@ir-engine/spatial/src/renderer/functions/useEngineCanvas'
 
 import { useFeathersClient, useP2PSignaling } from '@hexafield/ir-simple-api/src/client'
 
@@ -50,6 +51,7 @@ export default function Template() {
 
   return (
     <>
+      <Debug />
       <div ref={setRef} style={{ width: '100%', height: '100%' }} />
     </>
   )

@@ -25,12 +25,10 @@ Infinite Reality Engine. All Rights Reserved.
 
 import tailwindConfig from '../../../../../tailwind.config'
 
-
 const newConfig = structuredClone(tailwindConfig)
-newConfig.content = tailwindConfig.content.map((content, index) => {
-  content = content.replace('../', '../../../../')
-})
+newConfig.content = newConfig.content.map((a) => a.replace('../', '../../../../'))
+console.log(newConfig.content)
 
 module.exports = {
-  ...tailwindConfig
+  ...newConfig
 }
