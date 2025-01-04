@@ -24,6 +24,7 @@ import {
   useMutableState
 } from '@ir-engine/hyperflux'
 import { NetworkTopics, matchesUserID } from '@ir-engine/network'
+import { TransformComponent } from '@ir-engine/spatial'
 import { EngineState } from '@ir-engine/spatial/src/EngineState'
 import { CameraComponent } from '@ir-engine/spatial/src/camera/components/CameraComponent'
 import { NameComponent } from '@ir-engine/spatial/src/common/NameComponent'
@@ -39,13 +40,8 @@ import { PlayerColors, PlayerColorsType, PlayerState } from '../player/PlayerSys
 import { getAdjacentHexesToStructure } from '../structures/StructureFunctions'
 import { StructureHelperComponent, StructurePlacementState } from '../structures/StructurePlacementSystem'
 import { CornerDirection, EdgeDirection, StructureDataType, StructureState } from '../structures/StructureSystem'
-import { TransformComponent } from '@ir-engine/spatial'
 
 const _filterNull = <T extends any>(x: T | null): x is T => x !== null
-
-const randomDiceRoll = () => {
-  return Math.floor(Math.random() * 6) + 1
-}
 
 const chooseColor = () => {
   const playerColors = getState(GameState).playerColors
@@ -58,15 +54,6 @@ const chooseColor = () => {
     const userID = getState(EngineState).userID
     dispatchAction(SetupActions.chooseColor({ userID, color: nextColor }))
   }
-}
-
-const setupRoll = () => {
-  const selfPlayer = getMyColor()
-  const gameState = getState(GameState)
-  if (gameState.playerOrder.find((player) => player.player === selfPlayer)) return
-  const roll = [randomDiceRoll(), randomDiceRoll()]
-  console.log('Rolled a', roll[0] + roll[1])
-  dispatchAction(SetupActions.rollForOrder({ player: selfPlayer, roll }))
 }
 
 const placeStructure = () => {
@@ -94,43 +81,6 @@ const placeStructure = () => {
   }
 }
 
-const rollForResources = () => {
-  const currentPlayer = getState(GameState).currentPlayer
-
-  const dieRoll = [randomDiceRoll(), randomDiceRoll()]
-  const combined = dieRoll.reduce((a, b) => a + b, 0)
-
-  const newResources = {} as Record<ResourceType, number>
-
-  const playerStructures = getState(StructureState)
-    .structures.filter((s) => s.player === currentPlayer)
-    .filter((s) => s.type === 'settlement' || s.type === 'city')
-
-  for (const structure of playerStructures) {
-    const adjacentHexes = getAdjacentHexesToStructure(structure)
-    const stringCoords = adjacentHexes.filter(_filterNull).map((coords) => `${coords.q},${coords.r}`)
-    const entities = stringCoords
-      .map((coords) => HexagonGridComponent.coordsToEntity.get(NO_PROXY)[coords])
-      .filter((e) => entityExists(e) && hasComponent(e, HexagonGridComponent))
-    const hexes = entities.map((entity) => getComponent(entity, HexagonGridComponent))
-    const hexesHitThisTurn = hexes.filter((hex) => hex.chance === combined)
-    for (const hex of hexesHitThisTurn) {
-      const resource = ResourceByTile[hex.tile]
-      if (!resource) continue
-      const count = structure.type === 'settlement' ? 1 : 2
-      if (!newResources[resource]) newResources[resource] = count
-      else newResources[resource] += count
-    }
-  }
-
-  dispatchAction(
-    GameActions.rollResources({
-      player: currentPlayer,
-      resources: newResources
-    })
-  )
-}
-
 export const GameSystem = defineSystem({
   uuid: 'hexafield.catan.GameSystem',
   insert: { with: InputSystemGroup },
@@ -150,20 +100,10 @@ export const GameSystem = defineSystem({
       return
     }
 
-    if (currentPhase === 'setup-roll') {
-      if (buttons.KeyK?.down) setupRoll()
-      return
-    }
-
     if (!isCurrentPlayer(getState(EngineState).userID)) return
 
     if (currentPhase === 'setup-first' || currentPhase === 'setup-second' || currentPhase === 'build') {
       if (buttons.PrimaryClick?.up) placeStructure()
-      return
-    }
-
-    if (currentPhase === 'roll') {
-      if (buttons.KeyK?.down) rollForResources()
       return
     }
 
@@ -223,6 +163,13 @@ export const SetupActions = {
     type: 'hexafield.catan.SetupActions.rollForOrder',
     player: matchesPlayerColors,
     roll: matches.arrayOf(matches.number),
+    $cache: true,
+    $topic: NetworkTopics.world
+  }),
+  firstResources: defineAction({
+    type: 'hexafield.catan.SetupActions.firstResources',
+    player: matchesPlayerColors,
+    resources: matchesResources,
     $cache: true,
     $topic: NetworkTopics.world
   })
@@ -333,6 +280,14 @@ export const GameState = defineState({
         }
       }
     }),
+    firstResources: SetupActions.firstResources.receive((action) => {
+      const state = getMutableState(GameState)
+      for (const resource in action.resources) {
+        if (!state.resources.value[action.player]) state.resources.merge({ [action.player]: {} })
+        if (!state.resources[action.player].value[resource]) state.resources[action.player].merge({ [resource]: 0 })
+        state.resources[action.player][resource].set((c) => c + action.resources[resource])
+      }
+    }),
     purchaseItem: GameActions.purchaseItem.receive((action) => {
       const state = getMutableState(GameState)
       const currentPlayerResources = state.resources[action.player]
@@ -412,14 +367,16 @@ export const GameState = defineState({
     }, [state.structures])
 
     useEffect(() => {
-      if (state.currentPhase.value === 'setup-first' || state.currentPhase.value === 'setup-second') {
-        const currentPlayer = getState(GameState).currentPlayer
-        const playerStructures = getState(StructureState).structures.filter((s) => s.player === currentPlayer)
-        if (playerStructures.length % 2 === 0) {
-          getMutableState(StructurePlacementState).active.set(['settlement'])
-        } else if (playerStructures.length % 2 === 1) {
-          getMutableState(StructurePlacementState).active.set(['road'])
-        }
+      if (state.currentPhase.value !== 'setup-first' && state.currentPhase.value !== 'setup-second') return
+
+      const currentPlayer = getState(GameState).currentPlayer
+      if (currentPlayer !== getMyColor()) return
+
+      const playerStructures = getState(StructureState).structures.filter((s) => s.player === currentPlayer)
+      if (playerStructures.length % 2 === 0) {
+        getMutableState(StructurePlacementState).active.set(['settlement'])
+      } else if (playerStructures.length % 2 === 1) {
+        getMutableState(StructurePlacementState).active.set(['road'])
       }
     }, [state.currentPhase.value, state.structures])
 
@@ -427,7 +384,7 @@ export const GameState = defineState({
       if (state.currentPhase.value !== 'setup-second') return
 
       return () => {
-        // give resources to players
+        // once all players have placed their second settlement, we need to give resources to players
         // players each get resources for their second settlement
         // since all players have this reactor, we only need to do this for ourselves
         const player = getMyColor()
@@ -448,7 +405,7 @@ export const GameState = defineState({
           else resources[resource] += 1
         }
         dispatchAction(
-          GameActions.rollResources({
+          SetupActions.firstResources({
             player,
             resources
           })

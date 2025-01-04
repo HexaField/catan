@@ -14,14 +14,15 @@ Designed with fun and not security in mind!
 - [x] Placement of structures
 - [x] Turn Done & Resources UI
 - [x] Purchase structures UI
+- [x] Dice Roll UI
+- [ ] "You rolled..." UI
 - [ ] City upgrades
+- [ ] Colour selection UI
 - [ ] Resource Trading UI
-- [ ] Dice Roll UI
 - [ ] Robber
 - [ ] Harbours
 - [ ] Development cards
 - [ ] Room selection that persists in URL search params
-- [ ] Colour selection UI
 - [ ] Expansion packs!
 
 # Resources Used

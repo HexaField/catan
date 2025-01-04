@@ -98,7 +98,7 @@ export const getAdjacentCornersToEdge = (coords: {
       ]
     case 'SE':
       return [
-        { q: q + 1, r, direction: 'N' }, // top right
+        { q, r: r + 1, direction: 'N' }, // top right
         { q, r, direction: 'S' } // bottom left
       ]
     case 'SW':

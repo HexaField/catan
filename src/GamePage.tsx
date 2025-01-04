@@ -1,6 +1,7 @@
 import '@ir-engine/client/src/engine'
 
 import './game/GameSystem'
+import './game/DiceRollSystem'
 import './hexes/HexagonGridSystem'
 import './player/PlayerSystem'
 import './resources/ResourceSystem'

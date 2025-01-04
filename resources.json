@@ -1,6 +1,14 @@
 {
+  "public/Brick.png": {
+    "type": "asset",
+    "tags": [
+      "Image"
+    ],
+    "dependencies": [],
+    "name": "Brick.png"
+  },
   "public/Desert.png": {
-    "type": "file",
+    "type": "asset",
     "tags": [
       "Image"
     ],
@@ -8,7 +16,7 @@
     "name": "Desert.png"
   },
   "public/Fields.png": {
-    "type": "file",
+    "type": "asset",
     "tags": [
       "Image"
     ],
@@ -16,35 +24,147 @@
     "name": "Fields.png"
   },
   "public/Forest.png": {
-    "type": "file",
+    "type": "asset",
     "tags": [
       "Image"
     ],
     "dependencies": [],
     "name": "Forest.png"
   },
+  "public/Grain.png": {
+    "type": "asset",
+    "tags": [
+      "Image"
+    ],
+    "dependencies": [],
+    "name": "Grain.png"
+  },
   "public/Hills.png": {
-    "type": "file",
+    "type": "asset",
     "tags": [
       "Image"
     ],
     "dependencies": [],
     "name": "Hills.png"
   },
-  "public/Mountains.png": {
+  "public/loader_decoders/basis/basis_transcoder.js": {
     "type": "file",
+    "tags": [
+      "unknown"
+    ],
+    "dependencies": [],
+    "name": "basis_transcoder.js"
+  },
+  "public/loader_decoders/basis/basis_transcoder.wasm": {
+    "type": "file",
+    "tags": [
+      "unknown"
+    ],
+    "dependencies": [],
+    "name": "basis_transcoder.wasm"
+  },
+  "public/loader_decoders/corto.js": {
+    "type": "file",
+    "tags": [
+      "unknown"
+    ],
+    "dependencies": [],
+    "name": "corto.js"
+  },
+  "public/loader_decoders/draco_decoder.js": {
+    "type": "file",
+    "tags": [
+      "unknown"
+    ],
+    "dependencies": [],
+    "name": "draco_decoder.js"
+  },
+  "public/loader_decoders/draco_decoder.wasm": {
+    "type": "file",
+    "tags": [
+      "unknown"
+    ],
+    "dependencies": [],
+    "name": "draco_decoder.wasm"
+  },
+  "public/loader_decoders/draco_encoder.js": {
+    "type": "file",
+    "tags": [
+      "unknown"
+    ],
+    "dependencies": [],
+    "name": "draco_encoder.js"
+  },
+  "public/loader_decoders/draco_wasm_wrapper.js": {
+    "type": "file",
+    "tags": [
+      "unknown"
+    ],
+    "dependencies": [],
+    "name": "draco_wasm_wrapper.js"
+  },
+  "public/Lumber.png": {
+    "type": "asset",
+    "tags": [
+      "Image"
+    ],
+    "dependencies": [],
+    "name": "Lumber.png"
+  },
+  "public/Mountains.png": {
+    "type": "asset",
     "tags": [
       "Image"
     ],
     "dependencies": [],
     "name": "Mountains.png"
   },
+  "public/Ore.png": {
+    "type": "asset",
+    "tags": [
+      "Image"
+    ],
+    "dependencies": [],
+    "name": "Ore.png"
+  },
   "public/Pasture.png": {
-    "type": "file",
+    "type": "asset",
     "tags": [
       "Image"
     ],
     "dependencies": [],
     "name": "Pasture.png"
+  },
+  "public/Wool.png": {
+    "type": "asset",
+    "tags": [
+      "Image"
+    ],
+    "dependencies": [],
+    "name": "Wool.png"
+  },
+  "public/workers/generateBVHAsync.worker.js": {
+    "type": "file",
+    "tags": [
+      "unknown"
+    ],
+    "dependencies": [],
+    "name": "generateBVHAsync.worker.js"
+  },
+  "public/workers/three-mesh-bvh.umd.cjs.js": {
+    "type": "file",
+    "tags": [
+      "unknown"
+    ],
+    "dependencies": [],
+    "name": "three-mesh-bvh.umd.cjs.js"
+  },
+  "public/workers/three.min.js": {
+    "type": "file",
+    "tags": [
+      "unknown"
+    ],
+    "dependencies": [],
+    "name": "three.min.js"
   }
 }
