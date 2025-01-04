@@ -15,10 +15,10 @@ Designed with fun and not security in mind!
 - [x] Turn Done & Resources UI
 - [x] Purchase structures UI
 - [x] Dice Roll UI
-- [ ] "You rolled..." UI
-- [ ] City upgrades
+- [x] Last rolled UI
 - [ ] Colour selection UI
 - [ ] Resource Trading UI
+- [ ] City upgrades
 - [ ] Robber
 - [ ] Harbours
 - [ ] Development cards

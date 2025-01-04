@@ -249,7 +249,8 @@ export const GameState = defineState({
   initial: {
     currentPlayer: '' as PlayerColorsType,
     playerColors: {} as Record<PlayerColorsType, UserID>,
-    playerOrder: [] as Array<{ player: PlayerColorsType; roll: number }>,
+    playerOrder: [] as Array<{ player: PlayerColorsType; roll: number[] }>,
+    lastRoll: {} as { roll: number[]; player: PlayerColorsType },
     currentPhase: 'choose-colors' as PhaseTypes,
     resources: {} as Record<PlayerColorsType, PlayerResources>,
     structures: [] as StructureDataType[]
@@ -266,7 +267,7 @@ export const GameState = defineState({
     }),
     rollForOrder: SetupActions.rollForOrder.receive((action) => {
       const state = getMutableState(GameState)
-      state.playerOrder.merge([{ player: action.player, roll: action.roll[0] + action.roll[1] }])
+      state.playerOrder.merge([{ player: action.player, roll: action.roll }])
       if (state.playerOrder.length === getState(PlayerState).players.length) {
         // if any players have the same roll, they must re-roll
         const rolls = state.playerOrder.map((order) => order.roll)
@@ -275,7 +276,9 @@ export const GameState = defineState({
           state.currentPhase.set('setup-roll')
           state.playerOrder.set([])
         } else {
-          state.playerOrder.set(getState(GameState).playerOrder.sort((a, b) => b.roll - a.roll))
+          state.playerOrder.set(
+            getState(GameState).playerOrder.sort((a, b) => b.roll[0] + b.roll[1] - (a.roll[0] + a.roll[1]))
+          )
           state.currentPlayer.set(state.playerOrder[0].player.value)
           state.currentPhase.set('setup-first')
         }
@@ -346,6 +349,10 @@ export const GameState = defineState({
           state.resources[player][resource].set((c) => c + playerResources[resource])
         }
       }
+      state.lastRoll.set({
+        roll: action.roll,
+        player: state.currentPlayer.value
+      })
       /** @todo add trading */
       // state.currentPhase.set('trade')
       state.currentPhase.set('build')

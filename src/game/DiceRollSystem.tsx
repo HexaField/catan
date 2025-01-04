@@ -27,7 +27,8 @@ import { StructureState } from '../structures/StructureSystem'
 import { GameActions, GameState, getMyColor, SetupActions } from './GameSystem'
 
 const uiSize = new Vector2()
-const uiScale = 0.25
+const uiRollDiceScale = 0.25
+const uiLastRollScale = 0.5
 
 export const DiceRollSystem = defineSystem({
   uuid: 'hexafield.catan.DiceRollSystem',
@@ -41,8 +42,9 @@ export const DiceRollSystem = defineSystem({
     return <DiceRollReactor />
   }
 })
+
 const DiceRollReactor = () => {
-  const xrui = useHookstate(() => {
+  const rollDiceXRUI = useHookstate(() => {
     const { entity, container } = createXRUI(RollButtonXRUI)
 
     setComponent(entity, TransformComponent)
@@ -60,7 +62,7 @@ const DiceRollReactor = () => {
         ObjectFitFunctions.snapToSideOfScreen(
           entity,
           uiSize,
-          uiScale,
+          uiRollDiceScale,
           distance,
           0,
           0.8,
@@ -72,9 +74,40 @@ const DiceRollReactor = () => {
     return entity
   }).value
 
+  const lastRollXRUI = useHookstate(() => {
+    const { entity, container } = createXRUI(LastRollXRUI)
+
+    setComponent(entity, TransformComponent)
+    setComponent(entity, UUIDComponent, UUIDComponent.generateUUID())
+    setComponent(entity, NameComponent, 'Last Roll XRUI')
+    setComponent(entity, EntityTreeComponent, { parentEntity: getState(EngineState).originEntity })
+    setComponent(entity, ComputedTransformComponent, {
+      referenceEntities: [getState(EngineState).viewerEntity],
+      computeFunction: () => {
+        const camera = getComponent(getState(EngineState).viewerEntity, CameraComponent)
+        const distance = camera.near * 1.1 // 10% in front of camera
+        const uiContainer = container.rootLayer.querySelector('#container')
+        if (!uiContainer) return
+        uiSize.set(uiContainer.domSize.x, uiContainer.domSize.y)
+        ObjectFitFunctions.snapToSideOfScreen(
+          entity,
+          uiSize,
+          uiLastRollScale,
+          distance,
+          0,
+          0.9,
+          getState(EngineState).viewerEntity
+        )
+      }
+    })
+
+    return entity
+  }).value
+
   useEffect(() => {
     return () => {
-      removeEntity(xrui)
+      removeEntity(rollDiceXRUI)
+      removeEntity(lastRollXRUI)
     }
   }, [])
 
@@ -88,8 +121,15 @@ const DiceRollReactor = () => {
     (currentPhase === 'roll' && gameState.currentPlayer.value === myColor)
 
   useEffect(() => {
-    setVisibleComponent(xrui, active)
+    setVisibleComponent(rollDiceXRUI, active)
   }, [active])
+
+  useEffect(() => {
+    setVisibleComponent(
+      lastRollXRUI,
+      gameState.currentPhase.value !== 'choose-colors' && gameState.currentPhase.value !== 'roll'
+    )
+  }, [gameState.currentPhase.value])
 
   return null
 }
@@ -171,4 +211,34 @@ const _filterNull = <T extends any>(x: T | null): x is T => x !== null
 
 const randomDiceRoll = () => {
   return Math.floor(Math.random() * 6) + 1
+}
+
+const LastRollXRUI = () => {
+  const gameState = useMutableState(GameState)
+  const lastRoll = gameState.lastRoll.value
+
+  const setupHelperText = `${gameState.currentPlayer.value}'s turn to place a ${
+    gameState.structures.length % 2 === 0 ? 'settlement' : 'road'
+  }`
+
+  console.log({setupHelperText})
+
+  return (
+    <div id="container" xr-layer="true" style={{ display: 'flex', flexDirection: 'column', width: '400px', textAlign: 'center' }}>
+      <div>
+        {gameState.lastRoll.player.value ? (
+          `${gameState.lastRoll.player.value} rolled ${lastRoll.roll.join(', ')}`
+        ) : (
+          <>
+            {gameState.playerOrder.value.map((player) => (
+              <div key={player.player}>
+                {player.player} rolled {player.roll.join(', ')}
+              </div>
+            ))}
+            <div>{gameState.currentPhase.value !== 'setup-roll' && <>{setupHelperText}</>}</div>
+          </>
+        )}
+      </div>
+    </div>
+  )
 }

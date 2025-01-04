@@ -152,7 +152,7 @@ const Section = (props: { structure: string; resources: ResourceType[] }) => {
           display: 'flex',
           flexDirection: 'row',
           alignItems: 'center',
-          backgroundColor: hasResources ? '#FAFAFA' : '#F0F0F0',
+          backgroundColor: hasResources ? '#FAFAFA' : '#AFAFAF',
           justifyContent: 'space-between',
           width: '100%'
         }}
