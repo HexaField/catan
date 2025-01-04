@@ -21,6 +21,7 @@ import { ObjectFitFunctions } from '@ir-engine/spatial/src/transform/functions/O
 import React, { useEffect } from 'react'
 import { Vector2 } from 'three'
 import { HexagonGridComponent, ResourceByTile, ResourceType } from '../hexes/HexagonGridSystem'
+import { PlayerColorsType } from '../player/PlayerSystem'
 import { getAdjacentHexesToStructure } from '../structures/StructureFunctions'
 import { StructureState } from '../structures/StructureSystem'
 import { GameActions, GameState, getMyColor, SetupActions } from './GameSystem'
@@ -122,16 +123,14 @@ const RollButtonXRUI = () => {
 }
 
 const rollForResources = () => {
-  const currentPlayer = getState(GameState).currentPlayer
+  const roll = [randomDiceRoll(), randomDiceRoll()]
+  const combined = roll.reduce((a, b) => a + b, 0)
 
-  const dieRoll = [randomDiceRoll(), randomDiceRoll()]
-  const combined = dieRoll.reduce((a, b) => a + b, 0)
+  const playerResources = {} as Record<PlayerColorsType, Record<ResourceType, number>>
 
-  const newResources = {} as Record<ResourceType, number>
-
-  const playerStructures = getState(StructureState)
-    .structures.filter((s) => s.player === currentPlayer)
-    .filter((s) => s.type === 'settlement' || s.type === 'city')
+  const playerStructures = getState(StructureState).structures.filter(
+    (s) => s.type === 'settlement' || s.type === 'city'
+  )
 
   for (const structure of playerStructures) {
     const adjacentHexes = getAdjacentHexesToStructure(structure)
@@ -141,19 +140,21 @@ const rollForResources = () => {
       .filter((e) => entityExists(e) && hasComponent(e, HexagonGridComponent))
     const hexes = entities.map((entity) => getComponent(entity, HexagonGridComponent))
     const hexesHitThisTurn = hexes.filter((hex) => hex.chance === combined)
+    const player = structure.player
     for (const hex of hexesHitThisTurn) {
       const resource = ResourceByTile[hex.tile]
       if (!resource) continue
       const count = structure.type === 'settlement' ? 1 : 2
-      if (!newResources[resource]) newResources[resource] = count
-      else newResources[resource] += count
+      if (!playerResources[player]) playerResources[player] = {} as Record<ResourceType, number>
+      if (!playerResources[player][resource]) playerResources[player][resource] = count
+      else playerResources[player][resource] += count
     }
   }
 
   dispatchAction(
     GameActions.rollResources({
-      player: currentPlayer,
-      resources: newResources
+      roll,
+      playerResources
     })
   )
 }

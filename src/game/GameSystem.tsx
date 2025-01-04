@@ -150,6 +150,7 @@ hitting done
 
 const matchesPlayerColors = matches.literals('red', 'blue', 'white', 'orange')
 const matchesResources = matches.object as Validator<unknown, PlayerResources>
+const matchesPlayerResources = matches.object as Validator<unknown, Record<PlayerColorsType, PlayerResources>>
 
 export const SetupActions = {
   chooseColor: defineAction({
@@ -178,8 +179,8 @@ export const SetupActions = {
 export const GameActions = {
   rollResources: defineAction({
     type: 'hexafield.catan.GameActions.rollDice',
-    player: matchesPlayerColors,
-    resources: matchesResources,
+    roll: matches.arrayOf(matches.number),
+    playerResources: matchesPlayerResources,
     $cache: true,
     $topic: NetworkTopics.world
   }),
@@ -337,10 +338,13 @@ export const GameState = defineState({
     }),
     rollResources: GameActions.rollResources.receive((action) => {
       const state = getMutableState(GameState)
-      for (const resource in action.resources) {
-        if (!state.resources.value[action.player]) state.resources.merge({ [action.player]: {} })
-        if (!state.resources[action.player].value[resource]) state.resources[action.player].merge({ [resource]: 0 })
-        state.resources[action.player][resource].set((c) => c + action.resources[resource])
+      for (const player in action.playerResources) {
+        const playerResources = action.playerResources[player]
+        for (const resource in playerResources) {
+          if (!state.resources.value[player]) state.resources.merge({ [player]: {} })
+          if (!state.resources[player].value[resource]) state.resources[player].merge({ [resource]: 0 })
+          state.resources[player][resource].set((c) => c + playerResources[resource])
+        }
       }
       /** @todo add trading */
       // state.currentPhase.set('trade')
