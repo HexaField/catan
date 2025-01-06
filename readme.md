@@ -23,9 +23,14 @@ Designed with fun and not security in mind!
 - [ ] Harbours
 - [ ] Development cards
 - [ ] Room selection that persists in URL search params
+- [ ] Mobile friendly UI
+- [ ] VR mode
+- [ ] AR tabletop mode
 - [ ] Expansion packs!
 
 # Resources Used
 
 - https://www.printables.com/model/73257-settlers-of-catan-upgrade/files
 - https://www.redblobgames.com/grids/hexagons/
+- https://github.com/kriscamilleri/open-catan
+- https://github.com/BryantCabrera/Settlers-of-Catan/
