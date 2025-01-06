@@ -221,8 +221,6 @@ const LastRollXRUI = () => {
     gameState.structures.length % 2 === 0 ? 'settlement' : 'road'
   }`
 
-  console.log({ setupHelperText })
-
   return (
     <div
       id="container"

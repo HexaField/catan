@@ -6,6 +6,7 @@ import {
   entityExists,
   getComponent,
   hasComponent,
+  removeComponent,
   removeEntity,
   setComponent
 } from '@ir-engine/ecs'
@@ -31,7 +32,7 @@ import { ReferenceSpaceState } from '@ir-engine/spatial/src/ReferenceSpaceState'
 import { CameraComponent } from '@ir-engine/spatial/src/camera/components/CameraComponent'
 import { NameComponent } from '@ir-engine/spatial/src/common/NameComponent'
 import { InputComponent } from '@ir-engine/spatial/src/input/components/InputComponent'
-import { setVisibleComponent } from '@ir-engine/spatial/src/renderer/components/VisibleComponent'
+import { VisibleComponent, setVisibleComponent } from '@ir-engine/spatial/src/renderer/components/VisibleComponent'
 import { ComputedTransformComponent } from '@ir-engine/spatial/src/transform/components/ComputedTransformComponent'
 import { ObjectFitFunctions } from '@ir-engine/spatial/src/transform/functions/ObjectFitFunctions'
 import React, { useEffect } from 'react'
@@ -43,19 +44,6 @@ import { StructureHelperComponent, StructurePlacementState } from '../structures
 import { CornerDirection, EdgeDirection, StructureDataType, StructureState } from '../structures/StructureSystem'
 
 const _filterNull = <T extends any>(x: T | null): x is T => x !== null
-
-const chooseColor = () => {
-  const playerColors = getState(GameState).playerColors
-  const selfColor = getMyColor()
-  if (selfColor) return
-  // this will be replaced with UI eventually
-  // for now, just auto-choose the next color
-  const nextColor = PlayerColors.find((color) => !playerColors[color])
-  if (nextColor) {
-    const userID = getState(EngineState).userID
-    dispatchAction(SetupActions.chooseColor({ userID, color: nextColor }))
-  }
-}
 
 const placeStructure = () => {
   const currentPlayer = getState(GameState).currentPlayer
@@ -96,23 +84,12 @@ export const GameSystem = defineSystem({
 
     const currentPhase = getState(GameState).currentPhase
 
-    if (currentPhase === 'choose-colors') {
-      if (buttons.KeyK?.down) chooseColor()
-      return
-    }
-
     if (!isCurrentPlayer(getState(EngineState).userID)) return
 
     if (currentPhase === 'setup-first' || currentPhase === 'setup-second' || currentPhase === 'build') {
       if (buttons.PrimaryClick?.up) placeStructure()
       return
     }
-
-    // if (currentPhase === 'trade') {
-    //   // todo
-    //   dispatchAction(GameActions.doneTrading({ player: getMyColor() }))
-    //   return
-    // }
   }
 })
 
@@ -130,24 +107,6 @@ const Phases = ['choose-colors', 'setup-roll', 'setup-first', 'setup-second', 'r
 export type PhaseTypes = (typeof Phases)[number]
 
 export type PlayerResources = Record<ResourceType, number>
-
-/**
-
-Setup Phase
-- Choose colour
-- Roll to find player order
-- Place first settlement
-- Place second settlement
-
-Player Turn
-- Roll die to collect resources
-- Trade w other users & trade with bank
-- Build
-- Done
-- Can optionally play card any time from before rolling die to before 
-hitting done
-
-*/
 
 const matchesPlayerColors = matches.literals('red', 'blue', 'white', 'orange')
 const matchesResources = matches.object as Validator<unknown, PlayerResources>
@@ -434,11 +393,11 @@ export const GameState = defineState({
 })
 
 const uiSize = new Vector2()
-const uiScale = 0.05
+const uiScale = 0.25
 
 const DoneButtonReactor = () => {
-  const xrui = useHookstate(() => {
-    const { entity, container } = createXRUI(DoneButtonXRUI)
+  const chooseColorXRUI = useHookstate(() => {
+    const { entity, container } = createXRUI(ChooseColorXRUI)
 
     setComponent(entity, TransformComponent)
     setComponent(entity, UUIDComponent, UUIDComponent.generateUUID())
@@ -457,56 +416,83 @@ const DoneButtonReactor = () => {
           uiSize,
           uiScale,
           distance,
-          -0.9,
-          -0.9,
+          'center',
+          'center',
           getState(ReferenceSpaceState).viewerEntity
         )
       }
     })
+    removeComponent(entity, VisibleComponent)
 
     return entity
   }).value
 
   useEffect(() => {
     return () => {
-      removeEntity(xrui)
+      removeEntity(chooseColorXRUI)
     }
   }, [])
 
   const state = useMutableState(GameState).value
-  const currentPlayer = isCurrentPlayer(getState(EngineState).userID)
-  const isBuildPhase = state.currentPhase === 'build'
+  const chosenColor = !!getMyColor()
+  const isBuildPhase = state.currentPhase === 'choose-colors'
 
   useEffect(() => {
-    setVisibleComponent(xrui, currentPlayer && isBuildPhase)
-  }, [currentPlayer && isBuildPhase])
+    setVisibleComponent(chooseColorXRUI, !chosenColor && isBuildPhase)
+  }, [chosenColor, isBuildPhase])
 
   return null
 }
 
-const DoneButtonXRUI = () => {
+const ChooseColorXRUI = () => {
   const gameState = useMutableState(GameState).value
-  const currentPlayer = isCurrentPlayer(getState(EngineState).userID)
-  const isBuildPhase = gameState.currentPhase === 'build'
+  const myColorChosen = !!getMyColor()
 
   // clicked as a hackfix to prevent double-clicking
   const clicked = useHookstate(false)
 
-  const onClick = () => {
-    if (!isBuildPhase || !currentPlayer || clicked.value) return
+  const onClick = (color: PlayerColorsType) => {
+    if (myColorChosen || !!gameState.playerColors[color] || clicked.value) return
     clicked.set(true)
-    dispatchAction(GameActions.endTurn({ player: getMyColor() }))
+    dispatchAction(SetupActions.chooseColor({ color, userID: getState(EngineState).userID }))
   }
 
   useEffect(() => {
     clicked.set(false)
-  }, [isBuildPhase])
+  }, [gameState])
 
   return (
     <div id="container" xr-layer="true">
-      <button onClick={onClick}>Done</button>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gridTemplateRows: '1fr 1fr',
+          width: '100%',
+          height: '100%'
+        }}
+      >
+        {PlayerColors.map((color) => (
+          <button
+            key={color}
+            onClick={() => onClick(color)}
+            style={{
+              backgroundColor: myColorChosen || !!gameState.playerColors[color] ? colorDarkerVariants[color] : color
+            }}
+          >
+            {gameState.playerColors[color] ? 'Taken' : 'Choose'}
+          </button>
+        ))}
+      </div>
     </div>
   )
+}
+
+const colorDarkerVariants = {
+  red: '#AA3333',
+  blue: '#3333AA',
+  white: '#AAAAAA',
+  orange: '#AAA733'
 }
 
 const getNextPlayer = () => {

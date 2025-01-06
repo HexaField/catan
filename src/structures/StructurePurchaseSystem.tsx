@@ -103,6 +103,7 @@ const StructurePurchaseXRUI = () => {
         <Section structure="Settlement" resources={['Lumber', 'Brick', 'Grain', 'Wool']} />
         <Section structure="City" resources={['Grain', 'Grain', 'Ore', 'Ore', 'Ore']} />
         <Section structure="Development Card" resources={['Grain', 'Wool', 'Ore']} />
+        <DoneButton />
       </div>
     </>
   )
@@ -170,6 +171,31 @@ const Section = (props: { structure: string; resources: ResourceType[] }) => {
           <img src={`/${props.structure}.png`} style={{ width: '20px' }} />
         </div> */}
       </div>
+    </div>
+  )
+}
+
+const DoneButton = () => {
+  const gameState = useMutableState(GameState).value
+  const currentPlayer = isCurrentPlayer(getState(EngineState).userID)
+  const isBuildPhase = gameState.currentPhase === 'build'
+
+  // clicked as a hackfix to prevent double-clicking
+  const clicked = useHookstate(false)
+
+  const onClick = () => {
+    if (!isBuildPhase || !currentPlayer || clicked.value) return
+    clicked.set(true)
+    dispatchAction(GameActions.endTurn({ player: getMyColor() }))
+  }
+
+  useEffect(() => {
+    clicked.set(false)
+  }, [isBuildPhase])
+
+  return (
+    <div id="container" xr-layer="true">
+      <button onClick={onClick}>Done</button>
     </div>
   )
 }

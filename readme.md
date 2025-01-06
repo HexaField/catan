@@ -16,7 +16,7 @@ Designed with fun and not security in mind!
 - [x] Purchase structures UI
 - [x] Dice Roll UI
 - [x] Last rolled UI
-- [ ] Player Ready & Colour selection UI
+- [x] Player Ready & Colour selection UI
 - [ ] Resource Trading UI
 - [ ] City upgrades
 - [ ] Robber
