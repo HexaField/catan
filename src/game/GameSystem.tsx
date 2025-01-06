@@ -1,4 +1,5 @@
 import {
+  EntityTreeComponent,
   InputSystemGroup,
   UUIDComponent,
   defineSystem,
@@ -8,6 +9,7 @@ import {
   removeEntity,
   setComponent
 } from '@ir-engine/ecs'
+import { EngineState } from '@ir-engine/ecs/src/EngineState'
 import { createXRUI } from '@ir-engine/engine/src/xrui/createXRUI'
 import {
   NO_PROXY,
@@ -25,13 +27,12 @@ import {
 } from '@ir-engine/hyperflux'
 import { NetworkTopics, matchesUserID } from '@ir-engine/network'
 import { TransformComponent } from '@ir-engine/spatial'
-import { EngineState } from '@ir-engine/spatial/src/EngineState'
+import { ReferenceSpaceState } from '@ir-engine/spatial/src/ReferenceSpaceState'
 import { CameraComponent } from '@ir-engine/spatial/src/camera/components/CameraComponent'
 import { NameComponent } from '@ir-engine/spatial/src/common/NameComponent'
 import { InputComponent } from '@ir-engine/spatial/src/input/components/InputComponent'
 import { setVisibleComponent } from '@ir-engine/spatial/src/renderer/components/VisibleComponent'
 import { ComputedTransformComponent } from '@ir-engine/spatial/src/transform/components/ComputedTransformComponent'
-import { EntityTreeComponent } from '@ir-engine/spatial/src/transform/components/EntityTree'
 import { ObjectFitFunctions } from '@ir-engine/spatial/src/transform/functions/ObjectFitFunctions'
 import React, { useEffect } from 'react'
 import { Vector2 } from 'three'
@@ -85,7 +86,7 @@ export const GameSystem = defineSystem({
   uuid: 'hexafield.catan.GameSystem',
   insert: { with: InputSystemGroup },
   execute: () => {
-    const viewerEntity = getState(EngineState).viewerEntity
+    const viewerEntity = getState(ReferenceSpaceState).viewerEntity
     if (!viewerEntity) return
 
     const playersReady = getState(PlayerState).playersReady
@@ -424,7 +425,7 @@ export const GameState = defineState({
       }
     }, [state.currentPhase.value])
 
-    const viewerEntity = useMutableState(EngineState).viewerEntity.value
+    const viewerEntity = useMutableState(ReferenceSpaceState).viewerEntity.value
 
     if (!viewerEntity) return null
 
@@ -442,11 +443,11 @@ const DoneButtonReactor = () => {
     setComponent(entity, TransformComponent)
     setComponent(entity, UUIDComponent, UUIDComponent.generateUUID())
     setComponent(entity, NameComponent, 'Done Button XRUI')
-    setComponent(entity, EntityTreeComponent, { parentEntity: getState(EngineState).originEntity })
+    setComponent(entity, EntityTreeComponent, { parentEntity: getState(ReferenceSpaceState).originEntity })
     setComponent(entity, ComputedTransformComponent, {
-      referenceEntities: [getState(EngineState).viewerEntity],
+      referenceEntities: [getState(ReferenceSpaceState).viewerEntity],
       computeFunction: () => {
-        const camera = getComponent(getState(EngineState).viewerEntity, CameraComponent)
+        const camera = getComponent(getState(ReferenceSpaceState).viewerEntity, CameraComponent)
         const distance = camera.near * 1.1 // 10% in front of camera
         const uiContainer = container.rootLayer.querySelector('#container')
         if (!uiContainer) return
@@ -458,7 +459,7 @@ const DoneButtonReactor = () => {
           distance,
           -0.9,
           -0.9,
-          getState(EngineState).viewerEntity
+          getState(ReferenceSpaceState).viewerEntity
         )
       }
     })

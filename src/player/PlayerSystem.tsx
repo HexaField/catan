@@ -1,4 +1,4 @@
-import { InputSystemGroup, defineSystem } from '@ir-engine/ecs'
+import { EngineState, InputSystemGroup, defineSystem } from '@ir-engine/ecs'
 import {
   UserID,
   defineAction,
@@ -10,7 +10,7 @@ import {
   useMutableState
 } from '@ir-engine/hyperflux'
 import { NetworkState, NetworkTopics, matchesUserID } from '@ir-engine/network'
-import { EngineState } from '@ir-engine/spatial/src/EngineState'
+import { ReferenceSpaceState } from '@ir-engine/spatial/src/ReferenceSpaceState'
 import { InputComponent } from '@ir-engine/spatial/src/input/components/InputComponent'
 import React, { useEffect } from 'react'
 
@@ -21,7 +21,7 @@ export const PlayerSystem = defineSystem({
   uuid: 'hexafield.catan.PlayerSystem',
   insert: { with: InputSystemGroup },
   execute: () => {
-    const viewerEntity = getState(EngineState).viewerEntity
+    const viewerEntity = getState(ReferenceSpaceState).viewerEntity
     if (!viewerEntity) return
 
     const playerState = getState(PlayerState)

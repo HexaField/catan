@@ -1,5 +1,6 @@
 import {
   Entity,
+  EntityTreeComponent,
   PresentationSystemGroup,
   QueryReactor,
   S,
@@ -19,14 +20,13 @@ import { useTexture } from '@ir-engine/engine/src/assets/functions/resourceLoade
 import { TextComponent } from '@ir-engine/engine/src/scene/components/TextComponent'
 import { hookstate, none, useHookstate, useMutableState } from '@ir-engine/hyperflux'
 import { AmbientLightComponent, DirectionalLightComponent, TransformComponent } from '@ir-engine/spatial'
-import { EngineState } from '@ir-engine/spatial/src/EngineState'
+import { ReferenceSpaceState } from '@ir-engine/spatial/src/ReferenceSpaceState'
 import { NameComponent } from '@ir-engine/spatial/src/common/NameComponent'
 import { mergeBufferGeometries } from '@ir-engine/spatial/src/common/classes/BufferGeometryUtils'
 import { RendererComponent } from '@ir-engine/spatial/src/renderer/WebGLRendererSystem'
 import { MeshComponent } from '@ir-engine/spatial/src/renderer/components/MeshComponent'
 import { SceneComponent } from '@ir-engine/spatial/src/renderer/components/SceneComponents'
 import { VisibleComponent } from '@ir-engine/spatial/src/renderer/components/VisibleComponent'
-import { EntityTreeComponent } from '@ir-engine/spatial/src/transform/components/EntityTree'
 import React, { useEffect } from 'react'
 import {
   BufferGeometry,
@@ -151,7 +151,7 @@ export const GridSystem = defineSystem({
     //
   },
   reactor: function () {
-    const { viewerEntity, originEntity } = useMutableState(EngineState).value
+    const { viewerEntity, originEntity } = useMutableState(ReferenceSpaceState).value
     const sceneEntity = useHookstate(UndefinedEntity)
 
     useEffect(() => {

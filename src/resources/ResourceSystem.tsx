@@ -1,5 +1,7 @@
 import {
+  EngineState,
   Entity,
+  EntityTreeComponent,
   PresentationSystemGroup,
   UUIDComponent,
   UndefinedEntity,
@@ -12,13 +14,12 @@ import {
 import { useTexture } from '@ir-engine/engine/src/assets/functions/resourceLoaderHooks'
 import { getState, useHookstate, useMutableState } from '@ir-engine/hyperflux'
 import { TransformComponent } from '@ir-engine/spatial'
-import { EngineState } from '@ir-engine/spatial/src/EngineState'
+import { ReferenceSpaceState } from '@ir-engine/spatial/src/ReferenceSpaceState'
 import { CameraComponent } from '@ir-engine/spatial/src/camera/components/CameraComponent'
 import { NameComponent } from '@ir-engine/spatial/src/common/NameComponent'
 import { MeshComponent } from '@ir-engine/spatial/src/renderer/components/MeshComponent'
 import { VisibleComponent } from '@ir-engine/spatial/src/renderer/components/VisibleComponent'
 import { ComputedTransformComponent } from '@ir-engine/spatial/src/transform/components/ComputedTransformComponent'
-import { EntityTreeComponent } from '@ir-engine/spatial/src/transform/components/EntityTree'
 import { ObjectFitFunctions } from '@ir-engine/spatial/src/transform/functions/ObjectFitFunctions'
 import React, { useEffect } from 'react'
 import { DoubleSide, Mesh, MeshBasicMaterial, PlaneGeometry, Quaternion, SRGBColorSpace, Vector2, Vector3 } from 'three'
@@ -65,11 +66,11 @@ const ResourceReactor = (props: { myColor: PlayerColorsType }) => {
     setComponent(entity, NameComponent, 'Resource Cards Parent')
     setComponent(entity, TransformComponent)
     setComponent(entity, VisibleComponent)
-    setComponent(entity, EntityTreeComponent, { parentEntity: getState(EngineState).originEntity })
+    setComponent(entity, EntityTreeComponent, { parentEntity: getState(ReferenceSpaceState).originEntity })
     setComponent(entity, ComputedTransformComponent, {
-      referenceEntities: [getState(EngineState).viewerEntity],
+      referenceEntities: [getState(ReferenceSpaceState).viewerEntity],
       computeFunction: () => {
-        const camera = getComponent(getState(EngineState).viewerEntity, CameraComponent)
+        const camera = getComponent(getState(ReferenceSpaceState).viewerEntity, CameraComponent)
         const distance = camera.near * 2 // 10% in front of camera
         ObjectFitFunctions.snapToSideOfScreen(
           entity,
@@ -78,7 +79,7 @@ const ResourceReactor = (props: { myColor: PlayerColorsType }) => {
           distance,
           0.9,
           -1,
-          getState(EngineState).viewerEntity
+          getState(ReferenceSpaceState).viewerEntity
         )
       }
     })

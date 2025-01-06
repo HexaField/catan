@@ -1,4 +1,5 @@
 import {
+  EntityTreeComponent,
   PresentationSystemGroup,
   UUIDComponent,
   createEntity,
@@ -9,12 +10,11 @@ import {
 } from '@ir-engine/ecs'
 import { defineState, getState, useMutableState } from '@ir-engine/hyperflux'
 import { TransformComponent } from '@ir-engine/spatial'
-import { EngineState } from '@ir-engine/spatial/src/EngineState'
+import { ReferenceSpaceState } from '@ir-engine/spatial/src/ReferenceSpaceState'
 import { NameComponent } from '@ir-engine/spatial/src/common/NameComponent'
 import { mergeBufferGeometries } from '@ir-engine/spatial/src/common/classes/BufferGeometryUtils'
 import { MeshComponent } from '@ir-engine/spatial/src/renderer/components/MeshComponent'
 import { VisibleComponent } from '@ir-engine/spatial/src/renderer/components/VisibleComponent'
-import { EntityTreeComponent } from '@ir-engine/spatial/src/transform/components/EntityTree'
 import React, { useEffect } from 'react'
 import { BoxGeometry, CylinderGeometry, DoubleSide, Mesh, MeshLambertMaterial, Quaternion, Vector3 } from 'three'
 import { hexRadius, hexWidth } from '../hexes/HexagonGridConstants'
@@ -71,7 +71,7 @@ export const StructureSystem = defineSystem({
   insert: { after: PresentationSystemGroup },
   reactor: () => {
     const gridReady = useQuery([HexagonGridComponent]).length > 0
-    const originEntity = useMutableState(EngineState).originEntity.value
+    const originEntity = useMutableState(ReferenceSpaceState).originEntity.value
     const structures = useMutableState(StructureState).structures.value
 
     if (!gridReady || !originEntity) return null
@@ -90,7 +90,7 @@ const StructureReactor = (props: { data: StructureDataType }) => {
   const { data } = props
 
   useEffect(() => {
-    const originEntity = getState(EngineState).originEntity
+    const originEntity = getState(ReferenceSpaceState).originEntity
 
     if (data.type === 'settlement') {
       const settlementEntity = createEntity()

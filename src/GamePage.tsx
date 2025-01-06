@@ -1,7 +1,7 @@
 import '@ir-engine/client/src/engine'
 
-import './game/GameSystem'
 import './game/DiceRollSystem'
+import './game/GameSystem'
 import './hexes/HexagonGridSystem'
 import './player/PlayerSystem'
 import './resources/ResourceSystem'
@@ -15,7 +15,6 @@ import { Vector3 } from 'three'
 import Debug from '@ir-engine/client-core/src/components/Debug'
 import { getComponent, setComponent } from '@ir-engine/ecs'
 import { NetworkID, useMutableState, useReactiveRef } from '@ir-engine/hyperflux'
-import { EngineState } from '@ir-engine/spatial/src/EngineState'
 import { CameraComponent } from '@ir-engine/spatial/src/camera/components/CameraComponent'
 import { CameraOrbitComponent } from '@ir-engine/spatial/src/camera/components/CameraOrbitComponent'
 import { useSpatialEngine } from '@ir-engine/spatial/src/initializeEngine'
@@ -23,6 +22,7 @@ import { InputComponent } from '@ir-engine/spatial/src/input/components/InputCom
 import { useEngineCanvas } from '@ir-engine/spatial/src/renderer/functions/useEngineCanvas'
 
 import { useFeathersClient, useP2PSignaling } from '@hexafield/ir-simple-api/src/client'
+import { ReferenceSpaceState } from '@ir-engine/spatial/src/ReferenceSpaceState'
 
 const serverHost = process.env['VITE_SERVER_HOST']
 const serverPort = process.env['VITE_SERVER_PORT']
@@ -36,7 +36,7 @@ export default function Template() {
   useSpatialEngine()
   useEngineCanvas(ref)
 
-  const viewerEntity = useMutableState(EngineState).viewerEntity.value
+  const viewerEntity = useMutableState(ReferenceSpaceState).viewerEntity.value
 
   useEffect(() => {
     if (!viewerEntity) return

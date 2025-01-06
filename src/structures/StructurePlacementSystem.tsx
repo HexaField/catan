@@ -1,5 +1,7 @@
 import {
+  EngineState,
   Entity,
+  EntityTreeComponent,
   InputSystemGroup,
   QueryReactor,
   S,
@@ -18,13 +20,12 @@ import {
 } from '@ir-engine/ecs'
 import { NO_PROXY, defineState, getMutableState, getState, useHookstate, useMutableState } from '@ir-engine/hyperflux'
 import { TransformComponent } from '@ir-engine/spatial'
-import { EngineState } from '@ir-engine/spatial/src/EngineState'
+import { ReferenceSpaceState } from '@ir-engine/spatial/src/ReferenceSpaceState'
 import { NameComponent } from '@ir-engine/spatial/src/common/NameComponent'
 import { InputComponent } from '@ir-engine/spatial/src/input/components/InputComponent'
 import { InputSourceComponent } from '@ir-engine/spatial/src/input/components/InputSourceComponent'
 import { MeshComponent } from '@ir-engine/spatial/src/renderer/components/MeshComponent'
 import { VisibleComponent } from '@ir-engine/spatial/src/renderer/components/VisibleComponent'
-import { EntityTreeComponent } from '@ir-engine/spatial/src/transform/components/EntityTree'
 import React, { useEffect } from 'react'
 import { BoxGeometry, DoubleSide, Mesh, MeshBasicMaterial, Quaternion, SphereGeometry, Vector3 } from 'three'
 import { getMyColor, isCurrentPlayer } from '../game/GameSystem'
@@ -189,7 +190,7 @@ export const StructurePlacementState = defineState({
         position: position,
         rotation
       })
-      setComponent(structureEntity, EntityTreeComponent, { parentEntity: getState(EngineState).originEntity })
+      setComponent(structureEntity, EntityTreeComponent, { parentEntity: getState(ReferenceSpaceState).originEntity })
       setComponent(structureEntity, VisibleComponent)
       setComponent(
         structureEntity,
@@ -246,7 +247,7 @@ const createEdgeHelper = (coords: { q: number; r: number }, direction: EdgeDirec
     position: new Vector3(startPoint.x, 0, startPoint.z).add(offset.clone().multiplyScalar(hexEdgeLength / 2)),
     rotation: new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), angle)
   })
-  setComponent(entity, EntityTreeComponent, { parentEntity: getState(EngineState).originEntity })
+  setComponent(entity, EntityTreeComponent, { parentEntity: getState(ReferenceSpaceState).originEntity })
   setComponent(entity, VisibleComponent)
   setComponent(
     entity,
@@ -275,7 +276,7 @@ const createCornerHelper = (coords: { q: number; r: number }, direction: CornerD
     position: new Vector3(offset.x + vertices[vertexIndex * 3], 0, offset.z + vertices[vertexIndex * 3 + 2]),
     scale: new Vector3().setScalar(0.2)
   })
-  setComponent(entity, EntityTreeComponent, { parentEntity: getState(EngineState).originEntity })
+  setComponent(entity, EntityTreeComponent, { parentEntity: getState(ReferenceSpaceState).originEntity })
   setComponent(entity, VisibleComponent)
   setComponent(
     entity,

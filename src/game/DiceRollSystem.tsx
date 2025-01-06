@@ -2,6 +2,7 @@ import {
   AnimationSystemGroup,
   defineSystem,
   entityExists,
+  EntityTreeComponent,
   getComponent,
   hasComponent,
   removeEntity,
@@ -13,10 +14,9 @@ import { dispatchAction, getState, NO_PROXY, useHookstate, useMutableState } fro
 import { TransformComponent } from '@ir-engine/spatial'
 import { CameraComponent } from '@ir-engine/spatial/src/camera/components/CameraComponent'
 import { NameComponent } from '@ir-engine/spatial/src/common/NameComponent'
-import { EngineState } from '@ir-engine/spatial/src/EngineState'
+import { ReferenceSpaceState } from '@ir-engine/spatial/src/ReferenceSpaceState'
 import { setVisibleComponent } from '@ir-engine/spatial/src/renderer/components/VisibleComponent'
 import { ComputedTransformComponent } from '@ir-engine/spatial/src/transform/components/ComputedTransformComponent'
-import { EntityTreeComponent } from '@ir-engine/spatial/src/transform/components/EntityTree'
 import { ObjectFitFunctions } from '@ir-engine/spatial/src/transform/functions/ObjectFitFunctions'
 import React, { useEffect } from 'react'
 import { Vector2 } from 'three'
@@ -35,7 +35,7 @@ export const DiceRollSystem = defineSystem({
   insert: { with: AnimationSystemGroup },
   execute: () => {},
   reactor: () => {
-    const { originEntity, viewerEntity } = useMutableState(EngineState).value
+    const { originEntity, viewerEntity } = useMutableState(ReferenceSpaceState).value
 
     if (!originEntity || !viewerEntity) return null
 
@@ -50,11 +50,11 @@ const DiceRollReactor = () => {
     setComponent(entity, TransformComponent)
     setComponent(entity, UUIDComponent, UUIDComponent.generateUUID())
     setComponent(entity, NameComponent, 'Roll Dice Button XRUI')
-    setComponent(entity, EntityTreeComponent, { parentEntity: getState(EngineState).originEntity })
+    setComponent(entity, EntityTreeComponent, { parentEntity: getState(ReferenceSpaceState).originEntity })
     setComponent(entity, ComputedTransformComponent, {
-      referenceEntities: [getState(EngineState).viewerEntity],
+      referenceEntities: [getState(ReferenceSpaceState).viewerEntity],
       computeFunction: () => {
-        const camera = getComponent(getState(EngineState).viewerEntity, CameraComponent)
+        const camera = getComponent(getState(ReferenceSpaceState).viewerEntity, CameraComponent)
         const distance = camera.near * 1.1 // 10% in front of camera
         const uiContainer = container.rootLayer.querySelector('#container')
         if (!uiContainer) return
@@ -66,7 +66,7 @@ const DiceRollReactor = () => {
           distance,
           0,
           0.8,
-          getState(EngineState).viewerEntity
+          getState(ReferenceSpaceState).viewerEntity
         )
       }
     })
@@ -80,11 +80,11 @@ const DiceRollReactor = () => {
     setComponent(entity, TransformComponent)
     setComponent(entity, UUIDComponent, UUIDComponent.generateUUID())
     setComponent(entity, NameComponent, 'Last Roll XRUI')
-    setComponent(entity, EntityTreeComponent, { parentEntity: getState(EngineState).originEntity })
+    setComponent(entity, EntityTreeComponent, { parentEntity: getState(ReferenceSpaceState).originEntity })
     setComponent(entity, ComputedTransformComponent, {
-      referenceEntities: [getState(EngineState).viewerEntity],
+      referenceEntities: [getState(ReferenceSpaceState).viewerEntity],
       computeFunction: () => {
-        const camera = getComponent(getState(EngineState).viewerEntity, CameraComponent)
+        const camera = getComponent(getState(ReferenceSpaceState).viewerEntity, CameraComponent)
         const distance = camera.near * 1.1 // 10% in front of camera
         const uiContainer = container.rootLayer.querySelector('#container')
         if (!uiContainer) return
@@ -96,7 +96,7 @@ const DiceRollReactor = () => {
           distance,
           0,
           0.9,
-          getState(EngineState).viewerEntity
+          getState(ReferenceSpaceState).viewerEntity
         )
       }
     })
@@ -221,10 +221,14 @@ const LastRollXRUI = () => {
     gameState.structures.length % 2 === 0 ? 'settlement' : 'road'
   }`
 
-  console.log({setupHelperText})
+  console.log({ setupHelperText })
 
   return (
-    <div id="container" xr-layer="true" style={{ display: 'flex', flexDirection: 'column', width: '400px', textAlign: 'center' }}>
+    <div
+      id="container"
+      xr-layer="true"
+      style={{ display: 'flex', flexDirection: 'column', width: '400px', textAlign: 'center' }}
+    >
       <div>
         {gameState.lastRoll.player.value ? (
           `${gameState.lastRoll.player.value} rolled ${lastRoll.roll.join(', ')}`
