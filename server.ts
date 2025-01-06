@@ -14,7 +14,7 @@ const config: Configuration = {
   clientPort: Number(process.env['CLIENT_PORT']) || null,
   serverHost: process.env['SERVER_HOST'] || 'localhost',
   serverPort: Number(process.env['SERVER_PORT']) || 3030,
-  certPath: process.env['CERT'] || null, 
+  certPath: process.env['CERT'] || null,
   keyPath: process.env['KEY'] || null
 }
 
