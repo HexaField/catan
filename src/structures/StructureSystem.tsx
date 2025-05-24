@@ -1,6 +1,7 @@
 import {
   EntityTreeComponent,
   PresentationSystemGroup,
+  SourceID,
   UUIDComponent,
   createEntity,
   defineSystem,
@@ -94,7 +95,10 @@ const StructureReactor = (props: { data: StructureDataType }) => {
 
     if (data.type === 'settlement') {
       const settlementEntity = createEntity()
-      setComponent(settlementEntity, UUIDComponent, UUIDComponent.generateUUID())
+      setComponent(settlementEntity, UUIDComponent, {
+        entitySourceID: 'catan-structures' as SourceID,
+        entityID: UUIDComponent.generate()
+      })
       setComponent(settlementEntity, NameComponent, `Settlement-${data.player}`)
 
       const offset = axialToPixel(data.coords, hexWidth, hexRadius)
@@ -120,7 +124,10 @@ const StructureReactor = (props: { data: StructureDataType }) => {
 
     if (data.type === 'road') {
       const roadEntity = createEntity()
-      setComponent(roadEntity, UUIDComponent, UUIDComponent.generateUUID())
+      setComponent(roadEntity, UUIDComponent, {
+        entitySourceID: 'catan-structures' as SourceID,
+        entityID: UUIDComponent.generate()
+      })
       setComponent(roadEntity, NameComponent, `Road-${data.player}`)
 
       const startPoint = axialToPixel(data.coords, hexWidth, hexRadius)

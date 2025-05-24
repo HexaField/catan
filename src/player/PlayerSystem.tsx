@@ -9,7 +9,7 @@ import {
   useHookstate,
   useMutableState
 } from '@ir-engine/hyperflux'
-import { NetworkState, NetworkTopics, matchesUserID } from '@ir-engine/network'
+import { NetworkState, NetworkTopics, matchesUserID } from '@ir-engine/hyperflux'
 import { ReferenceSpaceState } from '@ir-engine/spatial/src/ReferenceSpaceState'
 import { InputComponent } from '@ir-engine/spatial/src/input/components/InputComponent'
 import React, { useEffect } from 'react'

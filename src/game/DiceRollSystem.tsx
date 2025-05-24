@@ -7,6 +7,7 @@ import {
   hasComponent,
   removeEntity,
   setComponent,
+  SourceID,
   UUIDComponent
 } from '@ir-engine/ecs'
 import { createXRUI } from '@ir-engine/engine/src/xrui/createXRUI'
@@ -48,7 +49,10 @@ const DiceRollReactor = () => {
     const { entity, container } = createXRUI(RollButtonXRUI)
 
     setComponent(entity, TransformComponent)
-    setComponent(entity, UUIDComponent, UUIDComponent.generateUUID())
+    setComponent(entity, UUIDComponent, {
+      entitySourceID: 'catan-ui' as SourceID,
+      entityID: UUIDComponent.generate()
+    })
     setComponent(entity, NameComponent, 'Roll Dice Button XRUI')
     setComponent(entity, EntityTreeComponent, { parentEntity: getState(ReferenceSpaceState).originEntity })
     setComponent(entity, ComputedTransformComponent, {
@@ -78,7 +82,10 @@ const DiceRollReactor = () => {
     const { entity, container } = createXRUI(LastRollXRUI)
 
     setComponent(entity, TransformComponent)
-    setComponent(entity, UUIDComponent, UUIDComponent.generateUUID())
+    setComponent(entity, UUIDComponent, {
+      entitySourceID: 'catan-ui' as SourceID,
+      entityID: UUIDComponent.generate()
+    })
     setComponent(entity, NameComponent, 'Last Roll XRUI')
     setComponent(entity, EntityTreeComponent, { parentEntity: getState(ReferenceSpaceState).originEntity })
     setComponent(entity, ComputedTransformComponent, {

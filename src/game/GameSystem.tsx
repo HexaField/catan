@@ -1,6 +1,7 @@
 import {
   EntityTreeComponent,
   InputSystemGroup,
+  SourceID,
   UUIDComponent,
   defineSystem,
   entityExists,
@@ -26,7 +27,7 @@ import {
   useHookstate,
   useMutableState
 } from '@ir-engine/hyperflux'
-import { NetworkTopics, matchesUserID } from '@ir-engine/network'
+import { NetworkTopics, matchesUserID } from '@ir-engine/hyperflux'
 import { TransformComponent } from '@ir-engine/spatial'
 import { ReferenceSpaceState } from '@ir-engine/spatial/src/ReferenceSpaceState'
 import { CameraComponent } from '@ir-engine/spatial/src/camera/components/CameraComponent'
@@ -400,7 +401,10 @@ const DoneButtonReactor = () => {
     const { entity, container } = createXRUI(ChooseColorXRUI)
 
     setComponent(entity, TransformComponent)
-    setComponent(entity, UUIDComponent, UUIDComponent.generateUUID())
+    setComponent(entity, UUIDComponent, {
+      entitySourceID: 'catan-ui' as SourceID,
+      entityID: UUIDComponent.generate()
+    })
     setComponent(entity, NameComponent, 'Done Button XRUI')
     setComponent(entity, EntityTreeComponent, { parentEntity: getState(ReferenceSpaceState).originEntity })
     setComponent(entity, ComputedTransformComponent, {

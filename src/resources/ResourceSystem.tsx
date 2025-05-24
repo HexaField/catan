@@ -3,6 +3,7 @@ import {
   Entity,
   EntityTreeComponent,
   PresentationSystemGroup,
+  SourceID,
   UUIDComponent,
   UndefinedEntity,
   createEntity,
@@ -62,7 +63,10 @@ const ResourceReactor = (props: { myColor: PlayerColorsType }) => {
     if (!resources[myColor]) return
 
     const entity = createEntity()
-    setComponent(entity, UUIDComponent, UUIDComponent.generateUUID())
+    setComponent(entity, UUIDComponent, {
+      entitySourceID: 'catan-resources' as SourceID,
+      entityID: UUIDComponent.generate()
+    })
     setComponent(entity, NameComponent, 'Resource Cards Parent')
     setComponent(entity, TransformComponent)
     setComponent(entity, VisibleComponent)
@@ -118,7 +122,10 @@ const ResourceCard = (props: { resource: ResourceType; i: number; total: number;
 
   useEffect(() => {
     const entity = createEntity()
-    setComponent(entity, UUIDComponent, UUIDComponent.generateUUID())
+    setComponent(entity, UUIDComponent, {
+      entitySourceID: 'catan-resources' as SourceID,
+      entityID: UUIDComponent.generate()
+    })
     setComponent(entity, NameComponent, 'Resource Card ' + props.resource + ' ' + props.i)
     setComponent(entity, TransformComponent, {
       // splay the cards out

@@ -5,6 +5,7 @@ import {
   InputSystemGroup,
   QueryReactor,
   S,
+  SourceID,
   UUIDComponent,
   UndefinedEntity,
   createEntity,
@@ -184,7 +185,10 @@ export const StructurePlacementState = defineState({
       }
 
       const structureEntity = createEntity()
-      setComponent(structureEntity, UUIDComponent, UUIDComponent.generateUUID())
+      setComponent(structureEntity, UUIDComponent, {
+        entitySourceID: 'catan-structures' as SourceID,
+        entityID: UUIDComponent.generate()
+      })
       setComponent(structureEntity, NameComponent, 'Structure')
       setComponent(structureEntity, TransformComponent, {
         position: position,
@@ -241,7 +245,10 @@ const createEdgeHelper = (coords: { q: number; r: number }, direction: EdgeDirec
       : new Vector3(-hexWidth / 2, 0, (hexWidth / 2) * Math.sqrt(3))
 
   const entity = createEntity()
-  setComponent(entity, UUIDComponent, UUIDComponent.generateUUID())
+  setComponent(entity, UUIDComponent, {
+    entitySourceID: 'catan-structures' as SourceID,
+    entityID: UUIDComponent.generate()
+  })
   setComponent(entity, NameComponent, `Edge Helper ${coords.q},${coords.r} ${direction}`)
   setComponent(entity, TransformComponent, {
     position: new Vector3(startPoint.x, 0, startPoint.z).add(offset.clone().multiplyScalar(hexEdgeLength / 2)),
@@ -270,7 +277,10 @@ const createCornerHelper = (coords: { q: number; r: number }, direction: CornerD
   const vertexIndex = direction === 'N' ? 4 : 1
 
   const entity = createEntity()
-  setComponent(entity, UUIDComponent, UUIDComponent.generateUUID())
+  setComponent(entity, UUIDComponent, {
+    entitySourceID: 'catan-structures' as SourceID,
+    entityID: UUIDComponent.generate()
+  })
   setComponent(entity, NameComponent, `Corner Helper ${coords.q},${coords.r} ${direction}`)
   setComponent(entity, TransformComponent, {
     position: new Vector3(offset.x + vertices[vertexIndex * 3], 0, offset.z + vertices[vertexIndex * 3 + 2]),

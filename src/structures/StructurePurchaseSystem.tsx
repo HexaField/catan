@@ -2,6 +2,7 @@ import {
   EngineState,
   EntityTreeComponent,
   PresentationSystemGroup,
+  SourceID,
   UUIDComponent,
   defineSystem,
   getComponent,
@@ -50,7 +51,10 @@ const StructurePurchaseReactor = () => {
   const xrui = useHookstate(() => {
     const { entity, container } = createXRUI(StructurePurchaseXRUI)
 
-    setComponent(entity, UUIDComponent, UUIDComponent.generateUUID())
+    setComponent(entity, UUIDComponent, {
+      entitySourceID: 'catan-purchase' as SourceID,
+      entityID: UUIDComponent.generate()
+    })
     setComponent(entity, NameComponent, 'Purchase Structure XRUI')
     setComponent(entity, TransformComponent)
     setComponent(entity, EntityTreeComponent, { parentEntity: getState(ReferenceSpaceState).originEntity })

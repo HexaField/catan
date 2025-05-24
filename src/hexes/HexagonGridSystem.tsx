@@ -4,6 +4,7 @@ import {
   PresentationSystemGroup,
   QueryReactor,
   S,
+  SourceID,
   UUIDComponent,
   UndefinedEntity,
   createEntity,
@@ -23,7 +24,7 @@ import { AmbientLightComponent, DirectionalLightComponent, TransformComponent } 
 import { ReferenceSpaceState } from '@ir-engine/spatial/src/ReferenceSpaceState'
 import { NameComponent } from '@ir-engine/spatial/src/common/NameComponent'
 import { mergeBufferGeometries } from '@ir-engine/spatial/src/common/classes/BufferGeometryUtils'
-import { RendererComponent } from '@ir-engine/spatial/src/renderer/WebGLRendererSystem'
+import { RendererComponent } from '@ir-engine/spatial/src/renderer/components/RendererComponent'
 import { MeshComponent } from '@ir-engine/spatial/src/renderer/components/MeshComponent'
 import { SceneComponent } from '@ir-engine/spatial/src/renderer/components/SceneComponents'
 import { VisibleComponent } from '@ir-engine/spatial/src/renderer/components/VisibleComponent'
@@ -158,7 +159,10 @@ export const GridSystem = defineSystem({
       if (!originEntity || !viewerEntity) return
 
       const entity = createEntity()
-      setComponent(entity, UUIDComponent, UUIDComponent.generateUUID())
+      setComponent(entity, UUIDComponent, {
+        entitySourceID: 'catan-scene' as SourceID,
+        entityID: UUIDComponent.generate()
+      })
       setComponent(entity, NameComponent, 'Catan Scene')
       setComponent(entity, TransformComponent)
       setComponent(entity, EntityTreeComponent, { parentEntity: originEntity })
@@ -167,7 +171,10 @@ export const GridSystem = defineSystem({
       sceneEntity.set(entity)
 
       const directionalLightEntity = createEntity()
-      setComponent(directionalLightEntity, UUIDComponent, UUIDComponent.generateUUID())
+      setComponent(directionalLightEntity, UUIDComponent, {
+        entitySourceID: 'catan-scene' as SourceID,
+        entityID: UUIDComponent.generate()
+      })
       setComponent(directionalLightEntity, NameComponent, 'Directional Light')
       setComponent(directionalLightEntity, TransformComponent, {
         rotation: new Quaternion().setFromEuler(new Euler(2, 5, 3))
@@ -177,7 +184,10 @@ export const GridSystem = defineSystem({
       setComponent(directionalLightEntity, DirectionalLightComponent, { color: new Color('white'), intensity: 0.5 })
 
       const ambientLightEntity = createEntity()
-      setComponent(ambientLightEntity, UUIDComponent, UUIDComponent.generateUUID())
+      setComponent(ambientLightEntity, UUIDComponent, {
+        entitySourceID: 'catan-scene' as SourceID,
+        entityID: UUIDComponent.generate()
+      })
       setComponent(ambientLightEntity, NameComponent, 'Ambient Light')
       setComponent(ambientLightEntity, TransformComponent)
       setComponent(ambientLightEntity, EntityTreeComponent, { parentEntity: originEntity })
@@ -219,7 +229,10 @@ const HexagonGridLoader = () => {
 
   const chanceBackgroundEntity = useHookstate(() => {
     const chanceBackgroundEntity = createEntity()
-    setComponent(chanceBackgroundEntity, UUIDComponent, UUIDComponent.generateUUID())
+    setComponent(chanceBackgroundEntity, UUIDComponent, {
+      entitySourceID: 'catan-hex' as SourceID,
+      entityID: UUIDComponent.generate()
+    })
     setComponent(chanceBackgroundEntity, NameComponent, getComponent(entity, NameComponent) + ' Chance')
     setComponent(chanceBackgroundEntity, TransformComponent, {
       position: new Vector3(0, 0.1, 0),
@@ -238,7 +251,10 @@ const HexagonGridLoader = () => {
 
   const chanceTextEntity = useHookstate(() => {
     const chanceTextEntity = createEntity()
-    setComponent(chanceTextEntity, UUIDComponent, UUIDComponent.generateUUID())
+    setComponent(chanceTextEntity, UUIDComponent, {
+      entitySourceID: 'catan-hex' as SourceID,
+      entityID: UUIDComponent.generate()
+    })
     setComponent(chanceTextEntity, NameComponent, getComponent(entity, NameComponent) + ' Chance Text')
     setComponent(chanceTextEntity, TransformComponent, {
       position: new Vector3(0, 0.15, 0),
@@ -260,7 +276,10 @@ const HexagonGridLoader = () => {
 
   const dotsEntity = useHookstate(() => {
     const dotsEntity = createEntity()
-    setComponent(dotsEntity, UUIDComponent, UUIDComponent.generateUUID())
+    setComponent(dotsEntity, UUIDComponent, {
+      entitySourceID: 'catan-hex' as SourceID,
+      entityID: UUIDComponent.generate()
+    })
     setComponent(dotsEntity, NameComponent, getComponent(entity, NameComponent) + ' Dots')
     setComponent(dotsEntity, TransformComponent, {
       position: new Vector3(0, 0.15, 0.125 + ChanceToDots[chance] * 0.03),
@@ -338,7 +357,10 @@ const GridBuilderReactor = (props: { parentEntity: Entity }) => {
       const { x, z } = axialToPixel({ q, r }, hexWidth, hexRadius)
 
       const entity = createEntity()
-      setComponent(entity, UUIDComponent, UUIDComponent.generateUUID())
+      setComponent(entity, UUIDComponent, {
+        entitySourceID: 'catan-hex' as SourceID,
+        entityID: UUIDComponent.generate()
+      })
       setComponent(entity, NameComponent, `Hexagon ${i}`)
       setComponent(entity, TransformComponent, {
         position: new Vector3(x, 0, z),
