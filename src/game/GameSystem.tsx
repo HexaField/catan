@@ -15,6 +15,7 @@ import { EngineState } from '@ir-engine/ecs/src/EngineState'
 import { createXRUI } from '@ir-engine/engine/src/xrui/createXRUI'
 import {
   NO_PROXY,
+  NetworkTopics,
   UserID,
   Validator,
   defineAction,
@@ -23,11 +24,11 @@ import {
   getMutableState,
   getState,
   matches,
+  matchesUserID,
   none,
   useHookstate,
   useMutableState
 } from '@ir-engine/hyperflux'
-import { NetworkTopics, matchesUserID } from '@ir-engine/hyperflux'
 import { TransformComponent } from '@ir-engine/spatial'
 import { ReferenceSpaceState } from '@ir-engine/spatial/src/ReferenceSpaceState'
 import { CameraComponent } from '@ir-engine/spatial/src/camera/components/CameraComponent'

@@ -1,15 +1,17 @@
 import { EngineState, InputSystemGroup, defineSystem } from '@ir-engine/ecs'
 import {
+  NetworkState,
+  NetworkTopics,
   UserID,
   defineAction,
   defineState,
   dispatchAction,
   getMutableState,
   getState,
+  matchesUserID,
   useHookstate,
   useMutableState
 } from '@ir-engine/hyperflux'
-import { NetworkState, NetworkTopics, matchesUserID } from '@ir-engine/hyperflux'
 import { ReferenceSpaceState } from '@ir-engine/spatial/src/ReferenceSpaceState'
 import { InputComponent } from '@ir-engine/spatial/src/input/components/InputComponent'
 import React, { useEffect } from 'react'
