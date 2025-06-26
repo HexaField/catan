@@ -18,14 +18,15 @@ import {
   useEntityContext
 } from '@ir-engine/ecs'
 import { useTexture } from '@ir-engine/engine/src/assets/functions/resourceLoaderHooks'
+import { DomainConfigState } from '@ir-engine/engine/src/assets/state/DomainConfigState'
 import { TextComponent } from '@ir-engine/engine/src/scene/components/TextComponent'
-import { hookstate, none, useHookstate, useMutableState } from '@ir-engine/hyperflux'
+import { getState, hookstate, none, useHookstate, useMutableState } from '@ir-engine/hyperflux'
 import { AmbientLightComponent, DirectionalLightComponent, TransformComponent } from '@ir-engine/spatial'
 import { ReferenceSpaceState } from '@ir-engine/spatial/src/ReferenceSpaceState'
 import { NameComponent } from '@ir-engine/spatial/src/common/NameComponent'
 import { mergeBufferGeometries } from '@ir-engine/spatial/src/common/classes/BufferGeometryUtils'
-import { RendererComponent } from '@ir-engine/spatial/src/renderer/components/RendererComponent'
 import { MeshComponent } from '@ir-engine/spatial/src/renderer/components/MeshComponent'
+import { RendererComponent } from '@ir-engine/spatial/src/renderer/components/RendererComponent'
 import { SceneComponent } from '@ir-engine/spatial/src/renderer/components/SceneComponents'
 import { VisibleComponent } from '@ir-engine/spatial/src/renderer/components/VisibleComponent'
 import React, { useEffect } from 'react'
@@ -217,7 +218,10 @@ const HexagonGridLoader = () => {
   const entity = useEntityContext()
 
   const { coords, tile, chance } = useComponent(entity, HexagonGridComponent).value
-  const [texture] = useTexture(`/${tile}.png`, entity)
+  const [texture] = useTexture(
+    getState(DomainConfigState).publicDomain + '/projects/hexafield/catan/public' + `/${tile}.png`,
+    entity
+  )
 
   useEffect(() => {
     if (texture) texture.colorSpace = SRGBColorSpace

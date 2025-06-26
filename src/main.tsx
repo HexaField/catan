@@ -35,8 +35,10 @@ import '@ir-engine/client/src/themes/components.css'
 import '@ir-engine/client/src/themes/utilities.css'
 
 import { createHyperStore } from '@ir-engine/hyperflux'
+import { setupStaticClient } from '@ir-engine/client-core/src/util/setupStaticClient'
 
 createHyperStore()
+setupStaticClient()
 
 const GamePage = lazy(() => import('./GamePage'))
 
