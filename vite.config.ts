@@ -35,7 +35,7 @@ import manifestJson from './manifest.json'
 
 const cwd = process.cwd()
 
-export default defineConfig(async ({ command }) => {
+export default defineConfig(async () => {
   dotenv.config({
     path: cwd + '/.env.local'
   })

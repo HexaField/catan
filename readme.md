@@ -28,9 +28,19 @@ Designed with fun and not security in mind!
 - [ ] AR tabletop mode
 - [ ] Expansion packs!
 
-# Resources Used
+## Resources Used
 
 - https://www.printables.com/model/73257-settlers-of-catan-upgrade/files
 - https://www.redblobgames.com/grids/hexagons/
 - https://github.com/kriscamilleri/open-catan
 - https://github.com/BryantCabrera/Settlers-of-Catan/
+
+## Setup
+
+```bash
+npm run clone-project -- --url https://github.com/hexafield/catan
+npm i
+cd packages/projects/projects/hexafield/catan
+cp .env.local.default .env.local
+npm run dev
+```
