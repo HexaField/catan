@@ -1,21 +1,28 @@
 import { EngineState, InputSystemGroup, defineSystem } from '@ir-engine/ecs'
 import {
+  NetworkState,
+  NetworkTopics,
   UserID,
   defineAction,
   defineState,
   dispatchAction,
   getMutableState,
   getState,
+  matchesUserID,
   useHookstate,
   useMutableState
 } from '@ir-engine/hyperflux'
-import { NetworkState, NetworkTopics, matchesUserID } from '@ir-engine/hyperflux'
 import { ReferenceSpaceState } from '@ir-engine/spatial/src/ReferenceSpaceState'
 import { InputComponent } from '@ir-engine/spatial/src/input/components/InputComponent'
+import { KeyboardButton } from '@ir-engine/spatial/src/input/state/ButtonState'
 import React, { useEffect } from 'react'
 
 export const PlayerColors = ['red', 'blue', 'white', 'orange'] as const
 export type PlayerColorsType = (typeof PlayerColors)[number]
+
+const keyBindings = {
+  Ready: [KeyboardButton.KeyK]
+}
 
 export const PlayerSystem = defineSystem({
   uuid: 'hexafield.catan.PlayerSystem',
@@ -30,10 +37,10 @@ export const PlayerSystem = defineSystem({
     const playersCount = playerState.players.length
     if (playersCount < 2) return
 
-    const buttons = InputComponent.getMergedButtons(viewerEntity)
+    const buttons = InputComponent.getButtons(viewerEntity, keyBindings, false)
 
     // will be replaced with UI eventually
-    if (buttons.KeyK?.down) {
+    if (buttons.Ready?.down) {
       dispatchAction(PlayerActions.playersReady({}))
     }
   },

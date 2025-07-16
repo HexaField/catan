@@ -15,6 +15,7 @@ import { EngineState } from '@ir-engine/ecs/src/EngineState'
 import { createXRUI } from '@ir-engine/engine/src/xrui/createXRUI'
 import {
   NO_PROXY,
+  NetworkTopics,
   UserID,
   Validator,
   defineAction,
@@ -23,16 +24,16 @@ import {
   getMutableState,
   getState,
   matches,
+  matchesUserID,
   none,
   useHookstate,
   useMutableState
 } from '@ir-engine/hyperflux'
-import { NetworkTopics, matchesUserID } from '@ir-engine/hyperflux'
 import { TransformComponent } from '@ir-engine/spatial'
 import { ReferenceSpaceState } from '@ir-engine/spatial/src/ReferenceSpaceState'
 import { CameraComponent } from '@ir-engine/spatial/src/camera/components/CameraComponent'
 import { NameComponent } from '@ir-engine/spatial/src/common/NameComponent'
-import { InputComponent } from '@ir-engine/spatial/src/input/components/InputComponent'
+import { DefaultButtonBindings, InputComponent } from '@ir-engine/spatial/src/input/components/InputComponent'
 import { VisibleComponent, setVisibleComponent } from '@ir-engine/spatial/src/renderer/components/VisibleComponent'
 import { ComputedTransformComponent } from '@ir-engine/spatial/src/transform/components/ComputedTransformComponent'
 import { ObjectFitFunctions } from '@ir-engine/spatial/src/transform/functions/ObjectFitFunctions'
@@ -81,14 +82,14 @@ export const GameSystem = defineSystem({
     const playersReady = getState(PlayerState).playersReady
     if (!playersReady) return
 
-    const buttons = InputComponent.getMergedButtons(viewerEntity)
+    const buttons = InputComponent.getButtons(viewerEntity, DefaultButtonBindings, false)
 
     const currentPhase = getState(GameState).currentPhase
 
     if (!isCurrentPlayer(getState(EngineState).userID)) return
 
     if (currentPhase === 'setup-first' || currentPhase === 'setup-second' || currentPhase === 'build') {
-      if (buttons.PrimaryClick?.up) placeStructure()
+      if (buttons.Interact?.up) placeStructure()
       return
     }
   }

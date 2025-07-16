@@ -145,7 +145,7 @@ const getValidSelectedHelper = () => {
 }
 
 export const StructurePlacementState = defineState({
-  name: 'StructurePlacementState',
+  name: 'hexafield.catan.StructurePlacementState',
   initial: {
     active: [] as Array<'settlement' | 'city' | 'road'>,
     selectedStructure: UndefinedEntity
