@@ -15,13 +15,13 @@ import { Vector3 } from 'three'
 import Debug from '@ir-engine/client-core/src/components/Debug'
 import { getComponent, setComponent } from '@ir-engine/ecs'
 import { NetworkID, useMutableState, useReactiveRef } from '@ir-engine/hyperflux'
-import { CameraComponent } from '@ir-engine/spatial/src/camera/components/CameraComponent'
 import { CameraOrbitComponent } from '@ir-engine/spatial/src/camera/components/CameraOrbitComponent'
 import { useSpatialEngine } from '@ir-engine/spatial/src/initializeEngine'
 import { InputComponent } from '@ir-engine/spatial/src/input/components/InputComponent'
 import { useEngineCanvas } from '@ir-engine/spatial/src/renderer/functions/useEngineCanvas'
 
 import { useFeathersClient, useP2PSignaling } from '@hexafield/ir-simple-api/src/client'
+import { TransformComponent } from '@ir-engine/spatial'
 import { ReferenceSpaceState } from '@ir-engine/spatial/src/ReferenceSpaceState'
 
 const serverHost = process.env['VITE_SERVER_HOST']
@@ -42,8 +42,9 @@ export default function Template() {
     if (!viewerEntity) return
     setComponent(viewerEntity, CameraOrbitComponent)
     setComponent(viewerEntity, InputComponent)
-    getComponent(viewerEntity, CameraComponent).position.set(0, 7, 8)
-    getComponent(viewerEntity, CameraComponent).quaternion.setFromAxisAngle(new Vector3(1, 0, 0), -Math.PI / 4)
+    const cameraTransform = getComponent(viewerEntity, TransformComponent)
+    cameraTransform.position.set(0, 7, 8)
+    cameraTransform.rotation.setFromAxisAngle(new Vector3(1, 0, 0), -Math.PI / 4)
   }, [viewerEntity])
 
   useEffect(() => {
