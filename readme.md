@@ -39,6 +39,7 @@ Designed with fun and not security in mind!
 
 ```bash
 npm run clone-project -- --url https://github.com/hexafield/catan
+npm run clone-project -- --url https://github.com/hexafield/ir-simple-api
 npm i
 cd packages/projects/projects/hexafield/catan
 cp .env.local.default .env.local
